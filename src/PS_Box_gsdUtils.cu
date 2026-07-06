@@ -3,6 +3,7 @@
 #include "include_libs.h"
 #include "gsd.h"
 #include <algorithm>
+#include <cstdint>
 #include <map>
 
 void die(const char*);
@@ -35,12 +36,12 @@ void PS_Box::writeGSDtraj() {
         auto version = gsd_make_version(1, 4);
         gsd_create_and_open(&gsd_file, gsd_name.c_str(), "gpu-tild", "hoomd", version, gsd_open_flag::GSD_OPEN_APPEND, 0);
 
-        unsigned int frame = totSteps;
+        uint64_t frame = totSteps;
         gsd_write_chunk(
             &gsd_file, "configuration/step", gsd_type::GSD_TYPE_UINT64,
             1, 1, 0, &frame
         );
-        
+
         unsigned int gsdDim = 3;
         gsd_write_chunk(
                 &gsd_file, "configuration/dimensions", gsd_type::GSD_TYPE_UINT8,
@@ -111,7 +112,7 @@ void PS_Box::writeGSDtraj() {
     }
     else{
         gsd_open(&gsd_file, gsd_name.c_str(), gsd_open_flag::GSD_OPEN_APPEND);
-        unsigned int frame = totSteps;
+        uint64_t frame = totSteps;
         gsd_write_chunk(
             &gsd_file, "configuration/step", gsd_type::GSD_TYPE_UINT64,
             1, 1, 0, &frame
@@ -193,7 +194,7 @@ void PS_Box::readGSDtraj(const char* file_name, int frame_num, int process){
         frame_num = tmp_frame - 1;
     }
 
-    if (frame_num > tmp_frame){
+    if (frame_num >= tmp_frame){
         std::cout << "Frame number is too large" << std::endl;
         std::string str = "Frame number is too large. Max frame number is " + std::to_string(tmp_frame);
         die(str);
