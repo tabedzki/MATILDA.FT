@@ -58,6 +58,7 @@ class PS_Box : public Box {
 
         int firstAllocDone; // Flag for first host memory alloc vs realloc
         // firstAllocDone = 0 prior to first call of allocHostParticleArrays
+        int prevAllocNs;    // Previous 'newns' passed to allocHostParticleArrays
 
         bool verbose;       // Flag to print tons of info to screen. Useful for debugging.
         

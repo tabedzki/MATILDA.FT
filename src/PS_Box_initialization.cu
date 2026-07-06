@@ -10,6 +10,7 @@
 #include "gsd.h"
 #include <algorithm>
 #include <map>
+#include <cstring>
 
 
 void die(const char*);
@@ -47,6 +48,13 @@ void PS_Box::readInput(std::ifstream& inp) {
     verbose = false;
     boxStyle = "ps";
     firstAllocDone = 0;
+    prevAllocNs = 0;
+
+    // Pointers reallocated in allocHostParticleArrays must start NULL so that
+    // the realloc() path (e.g. when enableCharges() is called after particles
+    // already exist) behaves like malloc() rather than reallocating garbage.
+    charges = NULL;
+    d_charges = NULL;
 
     // Some default values
     logFreq = 100;
@@ -599,8 +607,9 @@ void PS_Box::allocHostParticleArrays(int newns) {
     // Initial allocation needs to be done with malloc
     if ( firstAllocDone == 0 ) { 
         std::cout << " first allocation using malloc..." ;
-        v = (float*) malloc(newns*Dim*sizeof(float)); 
-        f = (float*) malloc(newns*Dim*sizeof(float)); 
+        // Use calloc so velocities (and forces) start at zero
+        v = (float*) calloc(newns*Dim, sizeof(float));
+        f = (float*) calloc(newns*Dim, sizeof(float));
 
         nBonds = (int*) malloc(newns * sizeof(int));
         bondedTo = (int*) malloc(newns * MAXBONDS * sizeof(int));
@@ -617,8 +626,13 @@ void PS_Box::allocHostParticleArrays(int newns) {
     
     // subsequent resizing done with realloc
     else { 
-        v = (float*) realloc(v, newns * Dim * sizeof(float)); 
-        f = (float*) realloc(v, newns * Dim * sizeof(float)); 
+        v = (float*) realloc(v, newns * Dim * sizeof(float));
+        f = (float*) realloc(f, newns * Dim * sizeof(float));
+
+        // Zero only the newly grown tail of v; existing velocity data is preserved
+        if ( newns > prevAllocNs ) {
+            memset(v + prevAllocNs*Dim, 0, (newns - prevAllocNs)*Dim*sizeof(float));
+        }
 
         nBonds = (int* ) realloc(nBonds, newns * sizeof(int));
         bondedTo = (int* ) realloc(bondedTo, newns*MAXBONDS * sizeof(int));
@@ -639,6 +653,7 @@ void PS_Box::allocHostParticleArrays(int newns) {
     mID.resize(newns);
 
     firstAllocDone = 1;
+    prevAllocNs = newns;
     std::cout << "done!" << std::endl;
 }
 
@@ -723,6 +738,10 @@ void PS_Box::sendAllHostToDevice(void) {
     // Copy positions to device
     cudaMemcpy(d_x, xtmp, nstot*Dim * sizeof(float), cudaMemcpyHostToDevice);
     check_cudaError("positions sent to device");
+
+    // Copy velocities to device (initialized to zero on the host)
+    cudaMemcpy(d_v, v, nstot*Dim * sizeof(float), cudaMemcpyHostToDevice);
+    check_cudaError("velocities sent to device");
 
     float dxf[3];
     if ( Dim > 3 ) die("Dim greater than 3?!??");
@@ -824,10 +843,10 @@ void PS_Box::readDataConfig(std::string inpName) {
 	(void)!fscanf(inp, "%f %f", &dx, &dy);   (void)!fgets(tt, 120, inp);
 	L[1] = (float)(dy - dx);
 	(void)!fscanf(inp, "%f %f", &dx, &dy);   (void)!fgets(tt, 120, inp);
+	// L is allocated with exactly Dim floats, so only write L[2] in 3-D.
+	// Downstream 2-D output hardcodes its z-extent and never reads L[2].
 	if (Dim > 2)
 		L[2] = (float)(dy - dx);
-	else
-		L[2] = 1.0f;
 
 	V = 1.0f;
 	for (i = 0; i < Dim; i++) {
@@ -911,6 +930,9 @@ void PS_Box::readDataConfig(std::string inpName) {
 			i1 = di;
 		}
 
+		if (nBonds[i1] >= MAXBONDS || nBonds[i2] >= MAXBONDS)
+			die("A particle has more bonds than MAXBONDS allows; increase MAXBONDS in the input file.");
+
 		bondedTo[i1*MAXBONDS+nBonds[i1]] = i2;
 		bondType[i1*MAXBONDS+nBonds[i1]] = b_type;
 		nBonds[i1]++;
@@ -958,6 +980,9 @@ void PS_Box::readDataConfig(std::string inpName) {
 			i1 = di;
 		}
 
+
+		if (nAngles[i1] >= MAXANGLES || nAngles[i2] >= MAXANGLES || nAngles[i3] >= MAXANGLES)
+			die("A particle has more angles than MAXANGLES allows; increase MAXANGLES in the input file.");
 
         // Store angle info on particle i1
 		int na = nAngles[i1];
