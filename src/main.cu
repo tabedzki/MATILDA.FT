@@ -54,6 +54,9 @@ int main(int argc, char** argv)
 	while ( argIndex < string_vec.size() ) {
 		// non-default input file flag
 		if ( string_vec[argIndex] == "-in" ) {
+			if ( argIndex + 1 >= string_vec.size() ) {
+				die("Usage: -in requires a filename argument");
+			}
 			input_file = string_vec[argIndex+1];
 			argIndex += 2;
 			std::cout << "Operating from input file " << input_file << std::endl;
@@ -61,6 +64,9 @@ int main(int argc, char** argv)
 
 		// manual GPU selection
 		else if ( string_vec[argIndex] == "-device" ) {
+			if ( argIndex + 1 >= string_vec.size() ) {
+				die("Usage: -device requires a device index argument");
+			}
 			int deviceIndex = stoi( string_vec[argIndex+1] );
 			argIndex += 2;
 			if ( deviceIndex >= devCount ) {
@@ -86,6 +92,9 @@ int main(int argc, char** argv)
 	
 	// open input file
 	std::ifstream in2(input_file);
+	if ( !in2.is_open() ) {
+		die("Unable to open input file " + input_file);
+	}
 
 
 	// storage for file info
@@ -93,8 +102,7 @@ int main(int argc, char** argv)
 
 
 	// Loop over all lines in the input file
-	while (!in2.eof()) {
-		getline(in2, line);
+	while (std::getline(in2, line)) {
 
 		// Blank or commented line
 		if (line.length() == 0 || line.at(0) == '#')
@@ -148,7 +156,7 @@ int main(int argc, char** argv)
 			box.at(0)->modifyBox(iss);
 		}
 
-	} // while (!in2.eof())
+	} // while (std::getline(in2, line))
 
 	std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << giveQuote() << std::endl << std::endl;
 
@@ -158,7 +166,7 @@ int main(int argc, char** argv)
 std::string giveQuote() {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> distrib_int(0, quoteDB.size());
+	std::uniform_int_distribution<> distrib_int(0, quoteDB.size() - 1);
 
 	int id = distrib_int(gen);
 

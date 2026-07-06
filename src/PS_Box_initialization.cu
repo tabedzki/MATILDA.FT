@@ -65,8 +65,7 @@ void PS_Box::readInput(std::ifstream& inp) {
 
     bool readDimension = false;
 
-    while (!inp.eof()) {
-        getline(inp, line);
+    while (std::getline(inp, line)) {
 
         if ( line.length() == 0 || line.at(0) == '#')
             continue;
@@ -137,8 +136,8 @@ void PS_Box::readInput(std::ifstream& inp) {
 
             // Commands are alphabetical from here on
             else if ( firstWord == "boxLengths" ) {
-                if (!readDimension) 
-                    std::cout << "\nWARNING! WARNING!\nboxLengths read before dimension specified, assuming default value of 2"<<std::endl;
+                if (!readDimension)
+                    die("Dim must be specified before boxLengths!");
 
                 for ( int j=0 ; j<Dim ; j++ ) {
                     if ( !(iss >> L[j])) { die("Failed to read boxlength value! Did you include values for each dimension?"); }
@@ -336,7 +335,7 @@ void PS_Box::readInput(std::ifstream& inp) {
             break;
         }
 
-    }// while (!inp.eof()), finished reading up to 'endBox' or end of file
+    }// while (std::getline(inp, line)), finished reading up to 'endBox' or end of file
     check_cudaError("end of parsing input");
 
     finishInitialization();
@@ -404,7 +403,7 @@ void PS_Box::finishInitialization() {
             else if ( charges[i] > 0.0 ) qpos += charges[i];
         } 
 
-        if ( qtot != 0.f ) {
+        if ( fabsf(qtot) > 1.0e-4f * (qpos - qneg) + 1.0e-6f ) {
             std::string qerror = "Box net charge is not zero! qtotal: " + std::to_string(qtot);
             qerror += "total negative: " + std::to_string(qneg) + ", positive: " + std::to_string(qpos);
             die(qerror);

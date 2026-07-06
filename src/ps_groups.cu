@@ -22,15 +22,15 @@ PS_Group::PS_Group(std::istringstream& iss, PS_Box* box) : mybox(box) {
     if ( s1 == "types" ) {
         std::vector<int> typ_ints;
 
-        while ( iss.tellg() != -1 ) {
-            iss >> s1;
-            typ_ints.push_back( mybox->findSpeciesInteger(s1) );            
+        while ( iss >> s1 ) {
+            typ_ints.push_back( mybox->findSpeciesInteger(s1) );
         }
 
         for ( int i=0 ; i<mybox->nstot; i++ ) {
             for ( int j=0 ; j<typ_ints.size() ; j++ ) {
                 if ( mybox->intSpecies[i] == typ_ints[j] ) {
                     nsites++;
+                    break;
                 }
             }
         }// i=0:mybox->nstot
@@ -50,6 +50,9 @@ PS_Group::PS_Group(std::istringstream& iss, PS_Box* box) : mybox(box) {
         }
 
         std::cout << "    making group with " << typ_ints.size() << " types with " << nsites << " total sites." << std::endl;
+    }
+    else {
+        die("Unknown group selector '" + s1 + "'; expected 'types'");
     }
 
     // Copy site list to device
