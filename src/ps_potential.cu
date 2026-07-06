@@ -16,7 +16,7 @@
 #include "PS_Box.h"
 
 
-__global__ void d_scale_potentials_by_scalar(cuComplex*, cuComplex*, const float, const int, const int);
+__global__ void d_scale_potentials_by_scalar(cuComplex*, cuComplex*, cuComplex*, const float, const int, const int, const int);
 
 // Allocates memory for:
 // potential, forces, virial contribution
@@ -231,16 +231,25 @@ void PS_Potential::update_prefactor(const int step, const int maxsteps) {
 
     double Ao_current = Ao_initial + (Ao_final - Ao_initial) / double(maxsteps) * double(step+1);
 
+    // The prefactor ramp works by rescaling the k-space kernels relative to
+    // the current uk[0]. If uk[0] is (near) zero, this scaling is undefined.
+    if ( fabs(real(uk[0])) < 1e-30 ) {
+        die("Potential cannot be ramped via prefactor scaling: uk[0] is zero "
+            "(or denormally small), so the scale factor is undefined.");
+    }
+
     double scale_factor = Ao_current / real(uk[0]);
 
     int GRID = mybox->M_Grid;
     int BLOCK = mybox->M_Block;
     int D = mybox->returnDimension();
     int M = mybox->M;
-    
-    d_scale_potentials_by_scalar<<<GRID, BLOCK>>>(d_uk, d_fk, scale_factor, D, M);
+    int nPC = mybox->n_P_comps;
 
-    cudaMemcpy(uk, d_uk, M*sizeof(std::complex<float>), cudaMemcpyDeviceToHost);
+    d_scale_potentials_by_scalar<<<GRID, BLOCK>>>(d_uk, d_fk, d_virk, scale_factor, D, nPC, M);
+
+    // Only uk[0] is needed for the next step's scale factor
+    cudaMemcpy(uk, d_uk, sizeof(std::complex<float>), cudaMemcpyDeviceToHost);
 
     if ( mybox->verbose ) {
         std::cout << "prefactor now calculated and updated to be: " << uk[0] << std::endl;

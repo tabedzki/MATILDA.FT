@@ -324,9 +324,9 @@ void FTS_Box::readInput(std::ifstream& inp) {
     tolMetric = "Heff";
     PCflag = false;
     totSteps = 0;
-    idum = time(0);
     threads = 512;
-    RAND_SEED = int(time(0));
+    RAND_SEED = int(time(0));   // positive seed for cuRAND
+    idum = -labs((long)RAND_SEED); // ran2() requires idum <= 0 to warm up its shuffle table
 
     boxType = "fts";
 
@@ -422,8 +422,8 @@ void FTS_Box::readInput(std::ifstream& inp) {
             }
 
             else if (firstWord == "randSeed" || firstWord == "RAND_SEED") {
-                iss >> idum;
-                RAND_SEED = idum;
+                iss >> RAND_SEED;               // Set GPU RNG (cuRAND) seed
+                idum = -labs((long)RAND_SEED);  // ran2() requires idum <= 0 to warm up its shuffle table
             }
 
             else if (firstWord == "rho0") {

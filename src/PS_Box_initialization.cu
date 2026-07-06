@@ -42,7 +42,8 @@ void PS_Box::readInput(std::ifstream& inp) {
     Nr = 100;
     rho0 = C = -1.0;
     nstot = nBondsTot = nAnglesTot = nBondTypes = nAngleTypes = 0;
-    idum = RANDSEED = time(0);
+    RANDSEED = time(0);     // positive seed for cuRAND
+    idum = -RANDSEED;       // ran2() requires idum <= 0 to warm up its shuffle table
     pmeorder = 1;
     verbose = false;
     boxStyle = "ps";
@@ -289,8 +290,8 @@ void PS_Box::readInput(std::ifstream& inp) {
 
 
             else if (firstWord == "randSeed" || firstWord == "RAND_SEED" || firstWord == "RANDSEED") {
-                iss >> idum;        // Set CPU RNG to have seed = RANDSEED
-                RANDSEED = idum;    // Set GPU RNG to have seed = RANDSEED
+                iss >> RANDSEED;            // Set GPU RNG (cuRAND) to have seed = RANDSEED
+                idum = -labs((long)RANDSEED); // ran2() requires idum <= 0 to warm up its shuffle table
             }
 
             else if ( firstWord == "readData" ) {

@@ -97,17 +97,22 @@ __global__ void d_buildNeighborList(
 
     int count = 0;
 
-    // Loop over 3^Dim neighboring cells (including self)
-    int dzlo = (Dim >= 3) ? -1 : 0;
-    int dzhi = (Dim >= 3) ?  1 : 0;
-    int dylo = (Dim >= 2) ? -1 : 0;
-    int dyhi = (Dim >= 2) ?  1 : 0;
+    // Loop over neighboring cells (including self). Clamp the offset range
+    // per axis by cell count so a cell is never visited more than once when
+    // an axis has fewer than 3 cells (which would double/triple count pairs).
+    // nCells==1 -> {0}; nCells==2 -> {-1,0}; nCells>=3 -> {-1,0,1}.
+    int dxlo = (nCellsX >= 2) ? -1 : 0;
+    int dxhi = (nCellsX >= 3) ?  1 : 0;
+    int dylo = (Dim >= 2 && nCellsY >= 2) ? -1 : 0;
+    int dyhi = (Dim >= 2 && nCellsY >= 3) ?  1 : 0;
+    int dzlo = (Dim >= 3 && nCellsZ >= 2) ? -1 : 0;
+    int dzhi = (Dim >= 3 && nCellsZ >= 3) ?  1 : 0;
 
     for (int dz = dzlo; dz <= dzhi; dz++) {
         int ncz = (cz + dz + nCellsZ) % nCellsZ;
         for (int dy = dylo; dy <= dyhi; dy++) {
             int ncy = (cy + dy + nCellsY) % nCellsY;
-            for (int dx = -1; dx <= 1; dx++) {
+            for (int dx = dxlo; dx <= dxhi; dx++) {
                 int ncx = (cx + dx + nCellsX) % nCellsX;
 
                 int cellIdx = ncx + nCellsX * (ncy + nCellsY * ncz);

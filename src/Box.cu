@@ -338,7 +338,7 @@ void Box::make_bias_field(
         else if ( phase == "S" ) {
 
             // Unit cell size
-            float a0 = dx[0] / float(n_periods);
+            float a0 = L[0] / float(n_periods);
             
             float sr[3], dr[3], mdr2;
 
@@ -354,7 +354,7 @@ void Box::make_bias_field(
                         sr[2] = iz * a0;
 
                         // Distance from particle to current position
-                        mdr2 = pbc_dr2(r, sr, dr);
+                        mdr2 = pbc_dr2(dr, r, sr);
 
                         float stdDev = 2.0;
                         float variance = stdDev * stdDev;
@@ -376,8 +376,8 @@ void Box::make_bias_field(
                         sr[1] = iy * a0 + 0.5 * a0;
                         sr[2] = iz * a0 + 0.5 * a0;
 
-                        // Distance from particle to current position		
-                        mdr2 = pbc_dr2(r, sr, dr);
+                        // Distance from particle to current position
+                        mdr2 = pbc_dr2(dr, r, sr);
 
                         // Gaussian potential with std dev of 2 hard-coded for now
                         expArg = -mdr2 / 2.0 / variance;

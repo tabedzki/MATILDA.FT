@@ -12,8 +12,10 @@
 __global__ void d_scale_potentials_by_scalar(
     cuComplex* uk,          // [M] pair potential in k-space
     cuComplex* fk,          // [M*Dim] force in k-space
+    cuComplex* virk,        // [M*n_P_comps] virial kernels in k-space
     const float lambda,     // Scaling factor
     const int Dim,          // System dimension
+    const int n_P_comps,    // Number of virial components
     const int M             // Number of grid points
     ) {
 
@@ -29,6 +31,12 @@ __global__ void d_scale_potentials_by_scalar(
     for (int j=0 ; j<Dim ; j++ ) {
         fk[id*Dim+j].x *= lambda;
         fk[id*Dim+j].y *= lambda;
+    }
+
+    // Scale the virial kernels so they stay consistent with the ramped potential
+    for (int j=0 ; j<n_P_comps ; j++ ) {
+        virk[id*n_P_comps+j].x *= lambda;
+        virk[id*n_P_comps+j].y *= lambda;
     }
 
 }
