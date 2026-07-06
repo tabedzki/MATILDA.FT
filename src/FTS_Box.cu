@@ -335,8 +335,7 @@ void FTS_Box::readInput(std::ifstream& inp) {
 
     bool readDimension = false;
 
-    while (!inp.eof()) {
-        getline(inp, line);
+    while (std::getline(inp, line)) {
 
         if ( line.length() == 0 || line.at(0) == '#')
             continue;
@@ -354,8 +353,8 @@ void FTS_Box::readInput(std::ifstream& inp) {
 
             // Commands are alphabetical from here on
             else if ( firstWord == "boxLengths" ) {
-                if (!readDimension) 
-                    std::cout << "\nWARNING! WARNING!\nboxLengths read before dimension specified, assuming default value of 2"<<std::endl;
+                if (!readDimension)
+                    die("Dim must be specified before boxLengths!");
 
                 for ( int j=0 ; j<Dim ; j++ ) {
                     iss >> L[j];
@@ -458,7 +457,7 @@ void FTS_Box::readInput(std::ifstream& inp) {
             break;
         }
 
-    }// while (!inp.eof())
+    }// while (std::getline(inp, line))
 
     // After input read, make the FFT plan
     // This currently assumes complex-double to complex-double transforms
@@ -698,7 +697,7 @@ void FTS_Box::modifyBox(std::istringstream& iss) {
         int molecInd;
         iss >> molecInd;  // 1-indexed
 
-        if ( molecInd > Molecs.size() ) {
+        if ( molecInd < 1 || molecInd > Molecs.size() ) {
             die("Invalid molecule index - out of range!");
         }
 
