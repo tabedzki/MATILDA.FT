@@ -10,8 +10,6 @@ EM::~EM(){
 
 EM::EM(std::istringstream& iss, PS_Box* box) : Integrator(iss, box) {
 
-	int nDOF = mybox->nstot * mybox->returnDimension();
-
 }
 
 void EM::Integrate_2(){

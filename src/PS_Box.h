@@ -34,7 +34,6 @@ class PS_Box : public Box {
         int nAnglesTot;     // Total number of angles
         int nAngleTypes;    // number of angle types
         int nTypes;         // Total number of particle types
-        int logFreq;        // Frequency to write to ps_data.dat
         int gsdFreq;        // Frequency to write to gsd files
         int logSpaceGSDflag;// flag for whether or not to log-space the GSD frames
         float logScaleGSD;  // scaling factor for the logspace writing
@@ -60,9 +59,9 @@ class PS_Box : public Box {
         // firstAllocDone = 0 prior to first call of allocHostParticleArrays
 
         bool verbose;       // Flag to print tons of info to screen. Useful for debugging.
-        
-        curandState* d_states; // [Dim*nstot] State var. for particle-level RNG
-        
+
+        // d_states (inherited from Box): [Dim*nstot] State var. for particle-level RNG
+
         float Upe;          // Total potential energy
         float Ubond, Uangle;// Stores bond and angle energy
 

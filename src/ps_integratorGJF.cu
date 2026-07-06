@@ -16,11 +16,6 @@ GJF::~GJF(){
 
 GJF::GJF(std::istringstream& iss, PS_Box* box) : Integrator(iss, box) {
 
-	int nDOF = mybox->nstot * mybox->returnDimension();
-
-	cudaMalloc(&d_xOld, nDOF * sizeof(float));
-	cudaMalloc(&d_noiseOld, nDOF * sizeof(float));
-
 }
 
 void GJF::Integrate_2(){
@@ -43,6 +38,9 @@ void GJF::Integrate_2(){
 void GJF::finishInitialization() {
 
 	int nDOF = mybox->nstot * mybox->returnDimension();
+
+	cudaMalloc(&d_xOld, nDOF * sizeof(float));
+	cudaMalloc(&d_noiseOld, nDOF * sizeof(float));
 
 	// Initialize 'old' positions to current positions
 	cudaMemcpy(d_xOld, mybox->d_x, nDOF*sizeof(float), cudaMemcpyDeviceToDevice);
