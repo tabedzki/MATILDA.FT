@@ -645,7 +645,7 @@ FTS_Box::FTS_Box(std::istringstream& iss ) : Box(iss) {
 
 // Integrate the given field using trapezoid rule (this is spectral accurate
 // when using PBCs)
-thrust::complex<double> FTS_Box::integTComplexD(thrust::host_vector<thrust::complex<double>> dat) {
+thrust::complex<double> FTS_Box::integTComplexD(const thrust::host_vector<thrust::complex<double>>& dat) {
     thrust::complex<double> sum = 0.0;
     for ( int i=0 ; i<this->M; i++ ) {
         sum += dat[i];
