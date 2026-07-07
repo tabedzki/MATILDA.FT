@@ -10,6 +10,7 @@
 #include "gsd.h"
 #include <algorithm>
 #include <map>
+#include <cstring>
 
 
 void die(const char*);
@@ -46,7 +47,10 @@ void PS_Box::readInput(std::ifstream& inp) {
     pmeorder = 1;
     verbose = false;
     boxStyle = "ps";
-    firstAllocDone = 0;
+
+    // Host particle arrays are std::vector, so their storage is managed
+    // automatically. Only the device pointer needs to start NULL.
+    d_charges = NULL;
 
     // Some default values
     logFreq = 100;
@@ -594,51 +598,29 @@ void PS_Box::allocHostParticleArrays(int newns) {
     std::cout << "  (Re)allocating for " << newns << " sites on the host..." ; 
     
     x.resize(newns*Dim);
-       
-    
-    // Initial allocation needs to be done with malloc
-    if ( firstAllocDone == 0 ) { 
-        std::cout << " first allocation using malloc..." ;
-        v = (float*) malloc(newns*Dim*sizeof(float)); 
-        f = (float*) malloc(newns*Dim*sizeof(float)); 
 
-        nBonds = (int*) malloc(newns * sizeof(int));
-        bondedTo = (int*) malloc(newns * MAXBONDS * sizeof(int));
-        bondType = (int*) malloc(newns * MAXBONDS * sizeof(int));
+    // std::vector::resize preserves existing data and value-initializes (zero-fills)
+    // any newly grown elements. This gives us, for free, the memory-safety semantics
+    // that previously required calloc + memset-of-tail + prevAllocNs bookkeeping:
+    // velocities/forces start zeroed and growth zero-fills only the new tail.
+    v.resize(newns*Dim, 0.0f);
+    f.resize(newns*Dim, 0.0f);
 
-        nAngles =    (int*) malloc(newns * sizeof(int));
-        angleType =  (int*) malloc(newns * MAXANGLES * sizeof(int));
-        angleGroup = (int*) malloc(newns * 3 * MAXANGLES * sizeof(int));
+    nBonds.resize(newns);
+    bondedTo.resize(newns*MAXBONDS);
+    bondType.resize(newns*MAXBONDS);
 
-        if ( doCharges ) {
-            charges = (float*) malloc( newns * sizeof(float));
-        }
+    nAngles.resize(newns);
+    angleType.resize(newns*MAXANGLES);
+    angleGroup.resize(newns*3*MAXANGLES);
+
+    if ( doCharges ) {
+        charges.resize(newns, 0.0f);
     }
-    
-    // subsequent resizing done with realloc
-    else { 
-        v = (float*) realloc(v, newns * Dim * sizeof(float)); 
-        f = (float*) realloc(v, newns * Dim * sizeof(float)); 
-
-        nBonds = (int* ) realloc(nBonds, newns * sizeof(int));
-        bondedTo = (int* ) realloc(bondedTo, newns*MAXBONDS * sizeof(int));
-        bondType = (int* ) realloc(bondType, newns*MAXBONDS * sizeof(int));
-                
-        nAngles =    (int*) realloc(nAngles,    newns*sizeof(int));
-        angleType =  (int*) realloc(angleType,  newns*MAXANGLES*sizeof(int));
-        angleGroup = (int*) realloc(angleGroup, newns*MAXANGLES*3*sizeof(int));
-
-        if ( doCharges ) {
-            charges = (float*) realloc(charges, newns*sizeof(float));
-        }
-
-    }
-
 
     intSpecies.resize(newns);
     mID.resize(newns);
 
-    firstAllocDone = 1;
     std::cout << "done!" << std::endl;
 }
 
@@ -724,6 +706,10 @@ void PS_Box::sendAllHostToDevice(void) {
     cudaMemcpy(d_x, xtmp, nstot*Dim * sizeof(float), cudaMemcpyHostToDevice);
     check_cudaError("positions sent to device");
 
+    // Copy velocities to device (initialized to zero on the host)
+    cudaMemcpy(d_v, v.data(), nstot*Dim * sizeof(float), cudaMemcpyHostToDevice);
+    check_cudaError("velocities sent to device");
+
     float dxf[3];
     if ( Dim > 3 ) die("Dim greater than 3?!??");
     for ( int j=0 ; j<Dim ; j++ ) {
@@ -741,9 +727,9 @@ void PS_Box::sendAllHostToDevice(void) {
     sendThrustVectorToDeviceArray(mID, d_mID, nstot);
     check_cudaError("mID and intspecies sent using template");
 
-    cudaMemcpy(d_nBonds, nBonds, nstot * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_nBonds, nBonds.data(), nstot * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_bondedTo, bondedTo.data(), nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_bondType, bondType.data(), nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
 
 
     sendThrustVectorToDeviceArray(bondReq, d_bondReq, nBondTypes);
@@ -754,12 +740,12 @@ void PS_Box::sendAllHostToDevice(void) {
 
 
     // cudaMemcpy(d_nAngles, nAngles, nstot * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_bondedTo, bondedTo.data(), nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_bondType, bondType.data(), nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
 
-    cudaMemcpy(d_nAngles,    nAngles,     nstot*sizeof(int),             cudaMemcpyHostToDevice);
-    cudaMemcpy(d_angleType,  angleType,   nstot*MAXANGLES*sizeof(int),   cudaMemcpyHostToDevice);
-    cudaMemcpy(d_angleGroup, angleGroup,  nstot*3*MAXANGLES*sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_nAngles,    nAngles.data(),     nstot*sizeof(int),             cudaMemcpyHostToDevice);
+    cudaMemcpy(d_angleType,  angleType.data(),   nstot*MAXANGLES*sizeof(int),   cudaMemcpyHostToDevice);
+    cudaMemcpy(d_angleGroup, angleGroup.data(),  nstot*3*MAXANGLES*sizeof(int), cudaMemcpyHostToDevice);
     
     sendThrustVectorToDeviceArray(angleTheq,  d_angleTheq,  nAngleTypes);
     sendThrustVectorToDeviceArray(angleK,     d_angleK,     nAngleTypes);
@@ -767,7 +753,7 @@ void PS_Box::sendAllHostToDevice(void) {
     
 
     if (doCharges) {
-        cudaMemcpy(d_charges, charges, nstot*sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_charges, charges.data(), nstot*sizeof(float), cudaMemcpyHostToDevice);
     }
 
     check_cudaError("template sending angle info to device");
@@ -824,10 +810,10 @@ void PS_Box::readDataConfig(std::string inpName) {
 	(void)!fscanf(inp, "%f %f", &dx, &dy);   (void)!fgets(tt, 120, inp);
 	L[1] = (float)(dy - dx);
 	(void)!fscanf(inp, "%f %f", &dx, &dy);   (void)!fgets(tt, 120, inp);
+	// L is allocated with exactly Dim floats, so only write L[2] in 3-D.
+	// Downstream 2-D output hardcodes its z-extent and never reads L[2].
 	if (Dim > 2)
 		L[2] = (float)(dy - dx);
-	else
-		L[2] = 1.0f;
 
 	V = 1.0f;
 	for (i = 0; i < Dim; i++) {
@@ -911,6 +897,9 @@ void PS_Box::readDataConfig(std::string inpName) {
 			i1 = di;
 		}
 
+		if (nBonds[i1] >= MAXBONDS || nBonds[i2] >= MAXBONDS)
+			die("A particle has more bonds than MAXBONDS allows; increase MAXBONDS in the input file.");
+
 		bondedTo[i1*MAXBONDS+nBonds[i1]] = i2;
 		bondType[i1*MAXBONDS+nBonds[i1]] = b_type;
 		nBonds[i1]++;
@@ -959,6 +948,9 @@ void PS_Box::readDataConfig(std::string inpName) {
 		}
 
 
+		if (nAngles[i1] >= MAXANGLES || nAngles[i2] >= MAXANGLES || nAngles[i3] >= MAXANGLES)
+			die("A particle has more angles than MAXANGLES allows; increase MAXANGLES in the input file.");
+
         // Store angle info on particle i1
 		int na = nAngles[i1];
         angleGroup[i1*MAXANGLES*3 + 3*na + 0] = i1;
@@ -1000,11 +992,10 @@ void PS_Box::readDataConfig(std::string inpName) {
 void PS_Box::enableCharges() {
     if ( !doCharges ) {
         doCharges = 1;
-        if ( nstot > 0 ) { 
-            allocHostParticleArrays(nstot);
-            for ( int i=0 ; i<nstot; i++ ) {
-                charges[i] = 0.0;
-            }
+        if ( nstot > 0 ) {
+            // Particles already exist: allocate the charge array. resize()
+            // zero-fills, so no explicit zeroing loop is needed.
+            charges.resize(nstot, 0.0f);
         }
-    }    
+    }
 }
