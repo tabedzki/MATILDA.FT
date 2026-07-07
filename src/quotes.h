@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-std::vector<std::string> quoteDB = { 
+inline const std::vector<std::string> quoteDB = {
   "'You don't believe in God? Well, whiskey will do' \n--Adia Victoria",
   "'They say every sin is deadly, but I believe they may be wrong. \nI'm guilty of all seven and don't feel too bad at all' \n--Drive-by Truckers",
   "'A guitar is a poor substitute for a football for the girls in my high school.' \n--Drive-by Truckers",

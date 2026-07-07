@@ -65,5 +65,5 @@ Integrator* IntegratorFactory(std::istringstream& iss, PS_Box* bx){
     }
 
 	die(s1 + " is not a valid Integrator");
-    return 0;
+    return nullptr;
 }

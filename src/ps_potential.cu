@@ -329,5 +329,5 @@ PS_Potential* PSPotentialFactory(std::istringstream &iss, PS_Box* box){
 
     std::string last_words = "ps_potential.cu: " + s1 + " is not a supported potential";
  	die(last_words.c_str());
- 	return 0;
+ 	return nullptr;
  }
