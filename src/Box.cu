@@ -36,8 +36,8 @@ void Box::setDimension(int d) {
     L = (float*) malloc(Dim*sizeof(float));
     Lh = (float*)malloc(Dim*sizeof(float));
 
-    cudaMalloc(&d_L, Dim*sizeof(float));
-    cudaMalloc(&d_Lh, Dim*sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_L, Dim*sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_Lh, Dim*sizeof(float)));
 
 }
 
@@ -464,7 +464,7 @@ void Box::make_bias_field(
 // Initialize the CUDA RNG routine
 void Box::initCuRand() { 
     if ( boxType == "fts" ) {
-        cudaMalloc(&d_states, M * sizeof(curandState));
+        CUDA_CHECK(cudaMalloc(&d_states, M * sizeof(curandState)));
         init_devCuRand<<<M_Grid, M_Block>>>(RAND_SEED, d_states, M);
     }
 }

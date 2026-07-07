@@ -181,14 +181,14 @@ void PS_NeighborList::initializeNList() {
               << " cells=" << nCellsX << "x" << nCellsY << "x" << nCellsZ
               << std::endl;
 
-    cudaMalloc(&d_cellID,           nsites * sizeof(int));
-    cudaMalloc(&d_particleID,       nsites * sizeof(int));
-    cudaMalloc(&d_cellID_sorted,    nsites * sizeof(int));
-    cudaMalloc(&d_particleID_sorted,nsites * sizeof(int));
-    cudaMalloc(&d_cellStart,        nCells * sizeof(int));
-    cudaMalloc(&d_cellEnd,          nCells * sizeof(int));
-    cudaMalloc(&d_neighborList,     nsites * maxNeighbors * sizeof(int));
-    cudaMalloc(&d_nNeighbors,       nsites * sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_cellID,           nsites * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_particleID,       nsites * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_cellID_sorted,    nsites * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_particleID_sorted,nsites * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_cellStart,        nCells * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_cellEnd,          nCells * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_neighborList,     nsites * maxNeighbors * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_nNeighbors,       nsites * sizeof(int)));
 }
 
 PS_NeighborList::~PS_NeighborList() {

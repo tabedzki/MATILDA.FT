@@ -655,54 +655,54 @@ void PS_Box::allocDeviceArrays(const int nsAlloc) {
     //     cudaFree(d_states);
     // }
 
-    cudaMalloc(&d_states, nsAlloc * Dim * sizeof(curandState));
+    CUDA_CHECK(cudaMalloc(&d_states, nsAlloc * Dim * sizeof(curandState)));
     d_initDeviceRNG<<<nsGrid, nsBlock>>>(RANDSEED, d_states, nstot);
 
-    cudaMalloc(&d_dxf, Dim * sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_dxf, Dim * sizeof(float)));
 
-    cudaMalloc(&d_x, nsAlloc * Dim * sizeof(float));
-    cudaMalloc(&d_v, nsAlloc * Dim * sizeof(float));
-    cudaMalloc(&d_f, nsAlloc*Dim*sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_x, nsAlloc * Dim * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_v, nsAlloc * Dim * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_f, nsAlloc*Dim*sizeof(float)));
 
-    
+
     if ( doCharges ) {
-        cudaMalloc(&d_charges, nsAlloc*sizeof(float));
+        CUDA_CHECK(cudaMalloc(&d_charges, nsAlloc*sizeof(float)));
     }
 
-    cudaMalloc(&d_intSpecies, nsAlloc * sizeof(int));
-    cudaMalloc(&d_mID, nsAlloc * sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_intSpecies, nsAlloc * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_mID, nsAlloc * sizeof(int)));
 
 
-    cudaMalloc(&d_gridW,    nsAlloc*gridPerPartic * sizeof(float));
-    cudaMalloc(&d_gridInds, nsAlloc*gridPerPartic * sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_gridW,    nsAlloc*gridPerPartic * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_gridInds, nsAlloc*gridPerPartic * sizeof(int)));
 
-    cudaMalloc(&d_nBonds, nsAlloc*sizeof(int));
-    cudaMalloc(&d_bondedTo, nsAlloc*MAXBONDS*sizeof(int));
-    cudaMalloc(&d_bondType, nsAlloc*MAXBONDS*sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_nBonds, nsAlloc*sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_bondedTo, nsAlloc*MAXBONDS*sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_bondType, nsAlloc*MAXBONDS*sizeof(int)));
 
-    cudaMalloc(&d_bondStyle,nBondTypes * sizeof(int));
-    cudaMalloc(&d_bondReq,  nBondTypes * sizeof(int));
-    cudaMalloc(&d_bondK,    nBondTypes * sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_bondStyle,nBondTypes * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_bondReq,  nBondTypes * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_bondK,    nBondTypes * sizeof(float)));
 
-    cudaMalloc(&d_nAngles,    nsAlloc*sizeof(int));
-    cudaMalloc(&d_angleGroup, nsAlloc*MAXANGLES*3*sizeof(int));
-    cudaMalloc(&d_angleType,  nsAlloc*MAXANGLES*sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_nAngles,    nsAlloc*sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_angleGroup, nsAlloc*MAXANGLES*3*sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&d_angleType,  nsAlloc*MAXANGLES*sizeof(int)));
 
-    cudaMalloc(&d_angleTheq,  nAngleTypes*sizeof(int));
-    cudaMalloc(&d_angleK,     nAngleTypes*sizeof(int));
-    cudaMalloc(&d_angleStyle, nAngleTypes*sizeof(int));
-    
+    CUDA_CHECK(cudaMalloc(&d_angleTheq,  nAngleTypes*sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_angleK,     nAngleTypes*sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_angleStyle, nAngleTypes*sizeof(int)));
+
 
     // Grid-based arrays
-    cudaMalloc(&d_Gabe, M * sizeof(float));
-    cudaMalloc(&d_Alex, M * sizeof(float));
-    cudaMalloc(&d_cpxGabe, M * sizeof(cuComplex));
-    cudaMalloc(&d_cpxAlex, M * sizeof(cuComplex));
+    CUDA_CHECK(cudaMalloc(&d_Gabe, M * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_Alex, M * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_cpxGabe, M * sizeof(cuComplex)));
+    CUDA_CHECK(cudaMalloc(&d_cpxAlex, M * sizeof(cuComplex)));
 
     // Pre-allocated scratch arrays for computeThermoProps()
-    cudaMalloc(&d_thermoE,        nsAlloc * sizeof(float));
-    cudaMalloc(&d_bondVirScratch, nsAlloc * n_P_comps * sizeof(float));
-    cudaMalloc(&d_angleVirScratch,nsAlloc * n_P_comps * sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_thermoE,        nsAlloc * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_bondVirScratch, nsAlloc * n_P_comps * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_angleVirScratch,nsAlloc * n_P_comps * sizeof(float)));
 
     std::cout << "done!" << std::endl;
 }
@@ -721,7 +721,7 @@ void PS_Box::sendAllHostToDevice(void) {
     }
 
     // Copy positions to device
-    cudaMemcpy(d_x, xtmp, nstot*Dim * sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_x, xtmp, nstot*Dim * sizeof(float), cudaMemcpyHostToDevice));
     check_cudaError("positions sent to device");
 
     float dxf[3];
@@ -729,11 +729,11 @@ void PS_Box::sendAllHostToDevice(void) {
     for ( int j=0 ; j<Dim ; j++ ) {
         dxf[j] = (float)dx[j];
     }
-    cudaMemcpy(d_dxf, dxf, Dim*sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_dxf, dxf, Dim*sizeof(float), cudaMemcpyHostToDevice));
     check_cudaError("dx box information sent to device");
 
-    cudaMemcpy(d_L, L, Dim*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_Lh, Lh, Dim*sizeof(float), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_L, L, Dim*sizeof(float), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_Lh, Lh, Dim*sizeof(float), cudaMemcpyHostToDevice));
     d_Nx = Nx;
     check_cudaError("box information sent to device");
     
@@ -741,9 +741,9 @@ void PS_Box::sendAllHostToDevice(void) {
     sendThrustVectorToDeviceArray(mID, d_mID, nstot);
     check_cudaError("mID and intspecies sent using template");
 
-    cudaMemcpy(d_nBonds, nBonds, nstot * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_nBonds, nBonds, nstot * sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice));
 
 
     sendThrustVectorToDeviceArray(bondReq, d_bondReq, nBondTypes);
@@ -754,12 +754,12 @@ void PS_Box::sendAllHostToDevice(void) {
 
 
     // cudaMemcpy(d_nAngles, nAngles, nstot * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_bondedTo, bondedTo, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_bondType, bondType, nstot*MAXBONDS * sizeof(int), cudaMemcpyHostToDevice));
 
-    cudaMemcpy(d_nAngles,    nAngles,     nstot*sizeof(int),             cudaMemcpyHostToDevice);
-    cudaMemcpy(d_angleType,  angleType,   nstot*MAXANGLES*sizeof(int),   cudaMemcpyHostToDevice);
-    cudaMemcpy(d_angleGroup, angleGroup,  nstot*3*MAXANGLES*sizeof(int), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_nAngles,    nAngles,     nstot*sizeof(int),             cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_angleType,  angleType,   nstot*MAXANGLES*sizeof(int),   cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(d_angleGroup, angleGroup,  nstot*3*MAXANGLES*sizeof(int), cudaMemcpyHostToDevice));
     
     sendThrustVectorToDeviceArray(angleTheq,  d_angleTheq,  nAngleTypes);
     sendThrustVectorToDeviceArray(angleK,     d_angleK,     nAngleTypes);
@@ -767,7 +767,7 @@ void PS_Box::sendAllHostToDevice(void) {
     
 
     if (doCharges) {
-        cudaMemcpy(d_charges, charges, nstot*sizeof(float), cudaMemcpyHostToDevice);
+        CUDA_CHECK(cudaMemcpy(d_charges, charges, nstot*sizeof(float), cudaMemcpyHostToDevice));
     }
 
     check_cudaError("template sending angle info to device");

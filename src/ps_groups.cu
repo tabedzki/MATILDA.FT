@@ -53,7 +53,7 @@ PS_Group::PS_Group(std::istringstream& iss, PS_Box* box) : mybox(box) {
     }
 
     // Copy site list to device
-    cudaMemcpy(d_siteList, siteList, nsites*sizeof(int), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_siteList, siteList, nsites*sizeof(int), cudaMemcpyHostToDevice));
 
     // Set group grid, block size
     Block = mybox->blockSize;
@@ -135,7 +135,7 @@ PS_Group::PS_Group(std::string inp, int typ, PS_Box* box) : mybox(box) {
 
 
     // Copy site list to device
-    cudaMemcpy(d_siteList, siteList, nsites*sizeof(int), cudaMemcpyHostToDevice);
+    CUDA_CHECK(cudaMemcpy(d_siteList, siteList, nsites*sizeof(int), cudaMemcpyHostToDevice));
 
     // Set group grid, block size
     Block = mybox->blockSize;
@@ -220,19 +220,19 @@ void PS_Group::zeroFields() {
 void PS_Group::allocateGroupMemory(int ns) {
     // Allocate needed memory for lists
     siteList = (int*) calloc(ns, sizeof(int));
-    cudaMalloc(&d_siteList, ns * sizeof(int));
+    CUDA_CHECK(cudaMalloc(&d_siteList, ns * sizeof(int)));
 
-    
+
     // Allocate memory for fields
     rho = (float*) malloc(mybox->M * sizeof(float));
-    cudaMalloc(&d_rho, mybox->M * sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_rho, mybox->M * sizeof(float)));
 
     check_cudaError("group allocation for d_rho");
 
 
     if ( this->name == "charges" ) {
         rhoq = (float*) malloc(mybox->M * sizeof(float));
-        cudaMalloc(&d_rhoq, mybox->M * sizeof(float));
+        CUDA_CHECK(cudaMalloc(&d_rhoq, mybox->M * sizeof(float)));
     }
 
     check_cudaError("group allocation for d_rhoq");
@@ -247,7 +247,7 @@ void PS_Group::enableForce() {
 
     int nalloc = mybox->M * mybox->returnDimension() * sizeof(float);
     gridForce = (float*) malloc( nalloc );
-    cudaMalloc(&d_gridForce, nalloc);
+    CUDA_CHECK(cudaMalloc(&d_gridForce, nalloc));
     
     forceFlag = 1;
 }
