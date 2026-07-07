@@ -92,27 +92,27 @@ __global__ void d_VV_integrate_2(
 
 
 void VV::Integrate_1() {
-    const int grid = mybox->psGroup[group_index].Grid;
-    const int block = mybox->psGroup[group_index].Block;
-    const int ns   = mybox->psGroup[group_index].nsites;
+    const int grid = mybox->psGroup[group_index]->Grid;
+    const int block = mybox->psGroup[group_index]->Block;
+    const int ns   = mybox->psGroup[group_index]->nsites;
     const int Dim  = mybox->returnDimension();
 
     d_VV_integrate_1<<<grid, block>>>(
         mybox->d_x, mybox->d_v, mybox->d_f,
         d_invMass, mybox->d_intSpecies, mybox->d_L,
-        mybox->psGroup[group_index].d_siteList,
+        mybox->psGroup[group_index]->d_siteList,
         ns, Dim, delt * 0.5f);
 }
 
 void VV::Integrate_2() {
-    const int grid = mybox->psGroup[group_index].Grid;
-    const int block = mybox->psGroup[group_index].Block;
-    const int ns   = mybox->psGroup[group_index].nsites;
+    const int grid = mybox->psGroup[group_index]->Grid;
+    const int block = mybox->psGroup[group_index]->Block;
+    const int ns   = mybox->psGroup[group_index]->nsites;
     const int Dim  = mybox->returnDimension();
 
     d_VV_integrate_2<<<grid, block>>>(
         mybox->d_v, mybox->d_f,
         d_invMass, mybox->d_intSpecies,
-        mybox->psGroup[group_index].d_siteList,
+        mybox->psGroup[group_index]->d_siteList,
         ns, Dim, delt * 0.5f);
 }

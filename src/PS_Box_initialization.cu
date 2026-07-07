@@ -192,7 +192,7 @@ void PS_Box::readInput(std::ifstream& inp) {
             }
 
             else if ( firstWord == "group") {
-                psGroup.push_back( PS_Group(iss,this));
+                psGroup.push_back( new PS_Group(iss,this));
                 // species.push_back(PS_Species(iss, this));
             }
 
@@ -455,7 +455,7 @@ void PS_Box::finishInitialization() {
     
     createDefaultGroups();
     for ( int i=0 ; i<psGroup.size(); i++ ) {
-        if ( psGroup[i].nsites == 0 ) {
+        if ( psGroup[i]->nsites == 0 ) {
             die("A group with size 0 found, exiting!");
         }
     }
@@ -527,8 +527,8 @@ void PS_Box::finishInitialization() {
     // init grid binary data files
     std::cout << "Initializing binary files..." ;
     for ( int i=0 ; i<psGroup.size() ; i++ ) {
-        std::cout << psGroup[i].returnName() << "..." ; fflush(stdout);
-        std::string nm = std::string("density-") + psGroup[i].returnName() + std::string(".bin");
+        std::cout << psGroup[i]->returnName() << "..." ; fflush(stdout);
+        std::string nm = std::string("density-") + psGroup[i]->returnName() + std::string(".bin");
         initBinaryDataFile(nm);
     }
     std::cout << "done!" << std::endl;
@@ -553,9 +553,9 @@ void PS_Box::finishInitialization() {
     
     for ( int i=0 ; i<psGroup.size(); i++ ) {
         // zero density, grid force fields
-        psGroup[i].zeroFields();
+        psGroup[i]->zeroFields();
         // Fill density fields
-        psGroup[i].makeDensityField();
+        psGroup[i]->makeDensityField();
     }
     check_cudaError("density field generation in PS_Box::finishInit");
 
@@ -571,16 +571,16 @@ void PS_Box::finishInitialization() {
 
 // Creates groups for each particle type and 'all'
 void PS_Box::createDefaultGroups() {
-    psGroup.push_back(PS_Group("all", -1, this));
+    psGroup.push_back(new PS_Group("all", -1, this));
 
     for ( int i=0 ; i<species.size(); i++ ) {
-        psGroup.push_back(PS_Group("type", i, this));
+        psGroup.push_back(new PS_Group("type", i, this));
 
-        std::cout << "Group name: " << psGroup[i+1].returnName() << std::endl;
+        std::cout << "Group name: " << psGroup[i+1]->returnName() << std::endl;
     }
 
     if ( doCharges ) {
-        psGroup.push_back(PS_Group("charges", -1, this));
+        psGroup.push_back(new PS_Group("charges", -1, this));
     }
 
     std::cout << "Groups for all, each type created" << std::endl;

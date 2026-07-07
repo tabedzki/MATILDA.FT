@@ -6,10 +6,37 @@
 
 void die(const char*);
 
-PS_Group::PS_Group() {}
-PS_Group::~PS_Group() {}
+PS_Group::PS_Group()
+    : forceFlag(0), nsites(0),
+      siteList(nullptr), d_siteList(nullptr),
+      rho(nullptr), d_rho(nullptr),
+      rhoq(nullptr), d_rhoq(nullptr),
+      gridForce(nullptr), d_gridForce(nullptr),
+      mybox(nullptr) {}
 
-PS_Group::PS_Group(std::istringstream& iss, PS_Box* box) : mybox(box) {
+// Frees all host/device buffers this group allocated. Each pointer is
+// null-initialized and only set when its buffer is allocated, so guarding
+// on null covers the "charges"-only (rhoq) and enableForce-only (gridForce)
+// buffers as well.
+PS_Group::~PS_Group() {
+    if ( siteList )   free(siteList);
+    if ( rho )        free(rho);
+    if ( rhoq )       free(rhoq);
+    if ( gridForce )  free(gridForce);
+
+    if ( d_siteList )  cudaFree(d_siteList);
+    if ( d_rho )       cudaFree(d_rho);
+    if ( d_rhoq )      cudaFree(d_rhoq);
+    if ( d_gridForce ) cudaFree(d_gridForce);
+}
+
+PS_Group::PS_Group(std::istringstream& iss, PS_Box* box)
+    : forceFlag(0),
+      siteList(nullptr), d_siteList(nullptr),
+      rho(nullptr), d_rho(nullptr),
+      rhoq(nullptr), d_rhoq(nullptr),
+      gridForce(nullptr), d_gridForce(nullptr),
+      mybox(box) {
     inputCommand = iss.str();
 
     iss >> name;
@@ -65,7 +92,13 @@ PS_Group::PS_Group(std::istringstream& iss, PS_Box* box) : mybox(box) {
 
 
 
-PS_Group::PS_Group(std::string inp, int typ, PS_Box* box) : mybox(box) {
+PS_Group::PS_Group(std::string inp, int typ, PS_Box* box)
+    : forceFlag(0),
+      siteList(nullptr), d_siteList(nullptr),
+      rho(nullptr), d_rho(nullptr),
+      rhoq(nullptr), d_rhoq(nullptr),
+      gridForce(nullptr), d_gridForce(nullptr),
+      mybox(box) {
     inputCommand = std::string("group ") + inp;
     forceFlag = 0;
     

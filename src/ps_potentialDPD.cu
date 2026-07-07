@@ -54,16 +54,16 @@ float DPD::CalcEnergy() {
 }
 
 void DPD::CalcForces() {
-    const int Grid  = mybox->psGroup[Iind].Grid;
-    const int Block = mybox->psGroup[Iind].Block;
-    const int ns    = mybox->psGroup[Iind].nsites;
+    const int Grid  = mybox->psGroup[Iind]->Grid;
+    const int Block = mybox->psGroup[Iind]->Block;
+    const int ns    = mybox->psGroup[Iind]->nsites;
     const int Dim   = mybox->returnDimension();
 
     d_DPD_forces<<<Grid, Block>>>(
         mybox->d_f, mybox->d_v, mybox->d_x,
         mybox->d_L, mybox->d_Lh,
         nList->d_neighborList, nList->d_nNeighbors,
-        mybox->psGroup[Iind].d_siteList,
+        mybox->psGroup[Iind]->d_siteList,
         mybox->d_states,
         gamma, sigma, nList->rcut,
         1.0f / sqrtf(delt),

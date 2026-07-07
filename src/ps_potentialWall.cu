@@ -53,7 +53,7 @@ void Wall::initializePotential() {
 
     PS_Potential::initializePotential();
 
-    int ns = mybox->psGroup[Iind].nsites;
+    int ns = mybox->psGroup[Iind]->nsites;
     cudaMalloc(&d_ener, ns * sizeof(float));
     check_cudaError("Wall: d_ener alloc");
 }
@@ -61,13 +61,13 @@ void Wall::initializePotential() {
 
 void Wall::CalcForces() {
 
-    int GRID  = mybox->psGroup[Iind].Grid;
-    int BLOCK = mybox->psGroup[Iind].Block;
+    int GRID  = mybox->psGroup[Iind]->Grid;
+    int BLOCK = mybox->psGroup[Iind]->Block;
     int Dim   = mybox->returnDimension();
-    int ns    = mybox->psGroup[Iind].nsites;
+    int ns    = mybox->psGroup[Iind]->nsites;
 
     d_wallHarmonicForce<<<GRID, BLOCK>>>(mybox->d_f, mybox->d_x,
-        mybox->psGroup[Iind].d_siteList,
+        mybox->psGroup[Iind]->d_siteList,
         ns, normalDim, wallPos, dirSign, k, Dim);
     check_cudaError("Wall: d_wallHarmonicForce");
 }
@@ -75,13 +75,13 @@ void Wall::CalcForces() {
 
 float Wall::CalcEnergy() {
 
-    int GRID  = mybox->psGroup[Iind].Grid;
-    int BLOCK = mybox->psGroup[Iind].Block;
+    int GRID  = mybox->psGroup[Iind]->Grid;
+    int BLOCK = mybox->psGroup[Iind]->Block;
     int Dim   = mybox->returnDimension();
-    int ns    = mybox->psGroup[Iind].nsites;
+    int ns    = mybox->psGroup[Iind]->nsites;
 
     d_wallHarmonicEnergy<<<GRID, BLOCK>>>(d_ener, mybox->d_x,
-        mybox->psGroup[Iind].d_siteList,
+        mybox->psGroup[Iind]->d_siteList,
         ns, normalDim, wallPos, dirSign, k, Dim);
     check_cudaError("Wall: d_wallHarmonicEnergy");
 

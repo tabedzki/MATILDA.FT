@@ -86,7 +86,7 @@ float NBCharge::CalcEnergy() {
 
 
     // Pointer to charge density field 
-    d_rhoq = mybox->psGroup[Iind].d_rhoq;
+    d_rhoq = mybox->psGroup[Iind]->d_rhoq;
 
     // real(Alex) = rhoJ, imag(Alex) = 0.0
     d_floatToCpx<<<Grid, Block>>>(d_cpxAlex, d_rhoq, M);
@@ -139,7 +139,7 @@ void NBCharge::CalcForces() {
 
 
     // Pointer to density field for J
-    d_rhoq = mybox->psGroup[Iind].d_rhoq;
+    d_rhoq = mybox->psGroup[Iind]->d_rhoq;
 
     // real(Alex) = rhoJ, imag(Alex) = 0.0
     d_floatToCpx<<<Grid, Block>>>(d_cpxAlex, d_rhoq, M);
@@ -160,6 +160,6 @@ void NBCharge::CalcForces() {
 
 
         // Gabe now contains the forces that act on particles I
-        mybox->psGroup[Iind].accumulateGridForceComp(d_Gabe, j);        
+        mybox->psGroup[Iind]->accumulateGridForceComp(d_Gabe, j);        
     }
 }

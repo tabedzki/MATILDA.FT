@@ -202,14 +202,14 @@ void BiasField::CalcForces() {
     int Dim = mybox->returnDimension();
 
     // Accumulate the forces from the fields
-    mybox->psGroup[Iind].accumulateGridForceComp(d_fx, 0);
+    mybox->psGroup[Iind]->accumulateGridForceComp(d_fx, 0);
 
     if ( Dim >= 2 ) {
-        mybox->psGroup[Iind].accumulateGridForceComp(d_fy, 1);
+        mybox->psGroup[Iind]->accumulateGridForceComp(d_fy, 1);
     }
 
     if ( Dim == 3 ) {
-        mybox->psGroup[Iind].accumulateGridForceComp(d_fz, 2);
+        mybox->psGroup[Iind]->accumulateGridForceComp(d_fz, 2);
     }
 
 }
@@ -224,7 +224,7 @@ float BiasField::CalcEnergy() {
     int M = mybox->M;
 
     // Alex = rhoI * u(r)
-    d_rhoI = mybox->psGroup[Iind].d_rho;
+    d_rhoI = mybox->psGroup[Iind]->d_rho;
     d_multiplyFloatByFloat<<<Grid, Block>>>(mybox->d_Alex, d_rhoI, d_ur, M);
 
     energy = mybox->gvol * mybox->sumDeviceArray(mybox->d_Alex, Block, M);
