@@ -9,13 +9,17 @@ CUDA_LOC = /usr/local/cuda
 
 
 CC = ${CUDA_LOC}/bin/nvcc
-# GIT_VERSION := $(shell git describe --abbrev=9 --dirty --always --tags)
+GIT_VERSION := $(shell git describe --abbrev=9 --dirty --always --tags)
 # GIT_DIRECTORY := $(shell git rev-parse --show-toplevel)
 
 # EIGEN_LOC = ../include/eigen-3.4.0
 
-CFLAGS = -std=c++14 -arch=sm_70 -rdc=true -O3 -I${CUDA_LOC}/include -Wno-deprecated-gpu-targets
+# override with: make ARCH=sm_86
+ARCH ?= sm_70
+
+CFLAGS = -std=c++14 -arch=$(ARCH) -rdc=true -O3 -I${CUDA_LOC}/include -Wno-deprecated-gpu-targets
 CPPFLAGS = --expt-relaxed-constexpr
+DEPFLAGS = -MMD -MP
 # CFLAGS = -std=c++14 -arch=sm_70 -rdc=true -O3 -I${CUDA_LOC}/include -I${EIGEN_LOC} -Wno-deprecated-gpu-targets
 # CPPFLAGS = -I${EIGEN_LOC} --expt-relaxed-constexpr
 
@@ -75,25 +79,44 @@ OBJS_CPP = $(SRCS_CPP:.cpp=.cpp.o)
 
 $(OBJFOLDER)/%.cu.o: %.cu git-version.h
 	@mkdir -p $(dir $@)
-	${CC} -g ${CFLAGS} -c $< -o $@
+	${CC} -g ${CFLAGS} ${DEPFLAGS} -MF $(@:.o=.d) -c $< -o $@
 
 $(OBJFOLDER)/%.cpp.o: %.cpp git-version.h
 	@mkdir -p $(dir $@)
-	${CC} -g ${CFLAGS} ${CPPFLAGS} -c $< -o $@
+	${CC} -g ${CFLAGS} ${CPPFLAGS} ${DEPFLAGS} -MF $(@:.o=.d) -c $< -o $@
 
 $(OBJFOLDER)/%.c.o: %.c git-version.h
 	@mkdir -p $(dir $@)
-	${CC} -g ${CFLAGS} -c $< -o $@
-	 
+	${CC} -g ${CFLAGS} ${DEPFLAGS} -MF $(@:.o=.d) -c $< -o $@
+
 ../matilda.ft: $(OBJS_MAKE) $(OBJS_MAKE_CPP) $(OBJS_MAKE_C)
 	$(CC) $(CFLAGS) -o $@ $(OBJS_MAKE) $(OBJS_MAKE_CPP) $(OBJS_MAKE_C) $(LIBS) -g
 
-git-version.h: 
-	sed "s/@GIT_VERSION@/$(GIT_VERSION)/"  git-version.h.in > git-version.h
+# git-version.h has no real prerequisites, so plain make would only ever
+# generate it once (when absent) and never notice the git version changed.
+# FORCE (phony) makes the recipe below run on every invocation, but the
+# recipe only touches git-version.h's mtime when its contents actually
+# change (content-compare via cmp), so this does NOT force every object
+# file that depends on git-version.h to recompile on every build.
+.PHONY: FORCE
+FORCE:
 
+git-version.h: FORCE
+	sed "s/@GIT_VERSION@/$(GIT_VERSION)/"  git-version.h.in > git-version.h.tmp
+	cmp -s git-version.h.tmp git-version.h || mv git-version.h.tmp git-version.h
+	rm -f git-version.h.tmp
+
+.PHONY: clean
 clean:
 	rm -fr *.o objects
 	rm -f matilda.ft ../matilda.ft
-	rm -f git-version.h
+	rm -f git-version.h git-version.h.tmp
 	rm -f *~
+
+# Include auto-generated header dependencies (from -MMD -MP) so touching a
+# header triggers recompilation of exactly the objects that depend on it.
+# The '-' suppresses errors on the first build, before any .d files exist.
+-include $(OBJS_MAKE:.o=.d)
+-include $(OBJS_MAKE_C:.o=.d)
+-include $(OBJS_MAKE_CPP:.o=.d)
 
