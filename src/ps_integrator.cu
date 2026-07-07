@@ -23,15 +23,13 @@ Integrator::Integrator(std::istringstream& iss, PS_Box* box) : mybox(box) {
     readRequiredParameter(iss, name);
 
     // parse optional arguments
-    if ( iss.tellg() != -1 ) {
-        std::string word;
-        iss >> word;
-
+    std::string word;
+    if ( iss >> word ) {
         if ( word == "delt" ) {
             iss >> delt;
         }
 
-        else { 
+        else {
             die("Invalid keyword in Integrator command");
         }
     }

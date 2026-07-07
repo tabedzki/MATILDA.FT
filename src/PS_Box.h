@@ -199,7 +199,7 @@ class PS_Box : public Box {
         void findSpinodal(std::istringstream&) override;
 
         // Writes thrust::host_vector array
-        void writeFieldTFloat(const char*, thrust::host_vector<float>);        
+        void writeFieldTFloat(const char*, const thrust::host_vector<float>&);        
         void writeFieldFloat(const char*, const float*);
         void writeFieldVTK(const char*, const float*);
         void writeKFieldFloat(const char*, const std::complex<float>*);

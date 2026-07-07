@@ -257,51 +257,13 @@ void FTS_Box::finishInitialization() {
 
 
 // Writes field data from std::vector to a text file. Both real and imaginary components are written
-void FTS_Box::writeComplexGridData(std::string name, std::vector<std::complex<double>> field) {
-
-    FILE *otp;
-    otp = fopen(name.c_str(), "w");
-
-    double *r = new double [Dim];
-    int *nn = new int [Dim];
-    for ( int i=0 ; i<M; i++ ) {
-        get_r(i,r);
-        unstack2(i,nn);
-        
-        for ( int j=0 ; j<Dim ; j++ ) fprintf(otp, "%lf ", r[j]);
-
-        fprintf(otp, "%1.4e %1.4e\n", field[i].real(), field[i].imag());
-
-        if ( Dim == 2 && nn[0] == (Nx[0]-1) ) fprintf(otp,"\n");
-    }
-
-    delete r;
-    delete nn;
-    fclose(otp);
+void FTS_Box::writeComplexGridData(std::string name, const std::vector<std::complex<double>>& field) {
+    writeComplexGridDataImpl(name, field.data());
 }
 
 // Writes field data from thrust::vector to a text file. Both real and imaginary components are written
-void FTS_Box::writeTComplexGridData(std::string name, thrust::host_vector<thrust::complex<double>> field) {
-
-    FILE *otp;
-    otp = fopen(name.c_str(), "w");
-
-    double *r = new double [Dim];
-    int *nn = new int [Dim];
-    for ( int i=0 ; i<M; i++ ) {
-        get_r(i,r);
-        unstack2(i,nn);
-        
-        for ( int j=0 ; j<Dim ; j++ ) fprintf(otp, "%lf ", r[j]);
-
-        fprintf(otp, "%1.4e %1.4e\n", field[i].real(), field[i].imag());
-
-        if ( Dim == 2 && nn[0] == (Nx[0]-1) ) fprintf(otp,"\n");
-    }
-
-    delete r;
-    delete nn;
-    fclose(otp);
+void FTS_Box::writeTComplexGridData(std::string name, const thrust::host_vector<thrust::complex<double>>& field) {
+    writeComplexGridDataImpl(name, thrust::raw_pointer_cast(field.data()));
 }
 
 

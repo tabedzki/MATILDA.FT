@@ -10,6 +10,10 @@ void die(const char* msg) {
 	exit(1);
 }
 
+void die(const std::string& msg) {
+	die(msg.c_str());
+}
+
 void check_cudaError(const char* tag) {
 	cudaError_t cudaReturn = cudaGetLastError();
 	if (cudaReturn != cudaSuccess) {

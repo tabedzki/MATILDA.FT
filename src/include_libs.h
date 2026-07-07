@@ -28,6 +28,8 @@
 #include <thrust/complex.h>
 #include "global_templated_functions.h"
 
+void die(const char*);
+void die(const std::string&);
 void check_cudaError(const char*);
 
 __global__ void d_multiplyDoubleCpxByCpxByCpxScalar(cuDoubleComplex*, const cuDoubleComplex*, 
