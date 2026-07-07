@@ -150,7 +150,7 @@ void PS_Box::writeGSDtraj() {
     if ( doCharges ) {
         //  die("Charges not set up yet in write gsd routine");
         gsd_write_chunk(&gsd_file, "particles/charge",      
-            gsd_type::GSD_TYPE_FLOAT, nstot, 1, 0, charges);
+            gsd_type::GSD_TYPE_FLOAT, nstot, 1, 0, charges.data());
     }
 
     // std::cout << "closing..." ; fflush(stdout);

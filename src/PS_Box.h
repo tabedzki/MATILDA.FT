@@ -56,10 +56,6 @@ class PS_Box : public Box {
         int n_P_comps;      // Number of independent pressure components (3 or 6)
         int nMolecules;     // Number of molecules in the box, not sure needed/used
 
-        int firstAllocDone; // Flag for first host memory alloc vs realloc
-        // firstAllocDone = 0 prior to first call of allocHostParticleArrays
-        int prevAllocNs;    // Previous 'newns' passed to allocHostParticleArrays
-
         bool verbose;       // Flag to print tons of info to screen. Useful for debugging.
         
         curandState* d_states; // [Dim*nstot] State var. for particle-level RNG
@@ -87,19 +83,25 @@ class PS_Box : public Box {
         // float *x;
         float *d_x;                         // [nstot*Dim] device particle positions  
 
-        float *f, *d_f;                     // [nstot*Dim]
-        float *v, *d_v;                     // [nstot*Dim]
+        std::vector<float> f;               // [nstot*Dim]
+        float *d_f;                         // [nstot*Dim]
+        std::vector<float> v;               // [nstot*Dim]
+        float *d_v;                         // [nstot*Dim]
 
-        float *charges, *d_charges;         // [nstot] charge magnitude
+        std::vector<float> charges;         // [nstot] charge magnitude
+        float *d_charges;                   // [nstot] charge magnitude
         
 
         std::vector<PS_Species> species;            // vector of species IDs
         float *speciesMass, *d_speciesMass;          // [nTypes] masses of species
         float *speciesMobility, *d_speciesMobility;  // [nTypes] mobility (diffusivity) of species
         
-        int *nBonds, *d_nBonds;         // [nstot] device number of bonds 
-        int *bondedTo, *d_bondedTo;     // [MAXBONDS*nstot] device bond partner list
-        int *bondType, *d_bondType;     // [MAXBONDS*nstot] device bond types for particles
+        std::vector<int> nBonds;        // [nstot] number of bonds
+        int *d_nBonds;                  // [nstot] device number of bonds
+        std::vector<int> bondedTo;      // [MAXBONDS*nstot] bond partner list
+        int *d_bondedTo;                // [MAXBONDS*nstot] device bond partner list
+        std::vector<int> bondType;      // [MAXBONDS*nstot] bond types for particles
+        int *d_bondType;                // [MAXBONDS*nstot] device bond types for particles
         int bondTime;                   // Stores time spent in bond function
 
         cuComplex *d_cpxGabe, *d_cpxAlex;       // [M] temp storage for device complex arrays
@@ -129,11 +131,14 @@ class PS_Box : public Box {
 
 
 
-        int *d_nAngles, *nAngles;         // [nstot] number of angles per particle 
-            
-        int *angleGroup, *d_angleGroup;    // [nstot*MAXANGLES*3] list of the three particles in each angle
-        
-        int *d_angleType, *angleType;     // [MAXANGLES*nstot] bond types for each particles
+        std::vector<int> nAngles;          // [nstot] number of angles per particle
+        int *d_nAngles;                    // [nstot] device number of angles per particle
+
+        std::vector<int> angleGroup;       // [nstot*MAXANGLES*3] list of the three particles in each angle
+        int *d_angleGroup;                 // [nstot*MAXANGLES*3] device list of the three particles in each angle
+
+        std::vector<int> angleType;        // [MAXANGLES*nstot] angle types for each particle
+        int *d_angleType;                  // [MAXANGLES*nstot] device angle types for each particle
         
         
         
