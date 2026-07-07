@@ -48,10 +48,10 @@ FTS_Potential* FTS_PotentialFactory(std::istringstream &iss, FTS_Box* box) {
     }
 	
 	else {
-        std::string s2 = s1 + " is not a valid FTS_Potential"; 
+        std::string s2 = s1 + " is not a valid FTS_Potential";
         die(s2.c_str());
     }
-	return 0;
+	return nullptr;
 }
 
 

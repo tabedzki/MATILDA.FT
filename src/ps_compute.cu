@@ -61,5 +61,5 @@ PS_Compute* PSComputeFactory(std::istringstream &iss, PS_Box* box) {
         die(last_words);
     }
 
-    return 0;
+    return nullptr;
 }

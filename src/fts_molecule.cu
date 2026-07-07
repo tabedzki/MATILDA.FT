@@ -63,10 +63,10 @@ FTS_Molec* FTS_MolecFactory(std::istringstream &iss, FTS_Box* box) {
         return new ParticleMolec(iss, box);
     }
 	else {
-        std::string s2 = s1 + " is not a valid FTS_Molec"; 
+        std::string s2 = s1 + " is not a valid FTS_Molec";
         die(s2.c_str());
     }
-	return 0;
+	return nullptr;
 }
 
 

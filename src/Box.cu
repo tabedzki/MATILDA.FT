@@ -324,13 +324,6 @@ void Box::make_bias_field(
         if (phase == "L") {
             float sin_arg = 2.0f * PI * float(n_periods) / L[dir];
             w[ind] = Ao * sin(sin_arg * r[dir]);
-
-            // for (int j = 0; j < Dim; j++) {
-            //     if (j == dir)
-            //         fr[ind * Dim + j] = Ao * sin_arg * cos(sin_arg * r[dir]);
-            //     else
-            //         fr[ind * Dim + j] = 0.f;
-            // }
         }
 
         // BCC phase
@@ -361,12 +354,7 @@ void Box::make_bias_field(
                         float expArg = -mdr2 / 2.0 / variance;
 
                         // Gaussian potential with std dev of 2 hard-coded for now
-                        w[ind] += -Ao * exp( expArg ); 
-
-                        // fr[ind * Dim + 0] += -Ao * exp( expArg ) / variance * dr[0];
-                        // fr[ind * Dim + 1] += -Ao * exp( expArg ) / variance * dr[1];
-                        // fr[ind * Dim + 2] += -Ao * exp( expArg ) / variance * dr[2];
-
+                        w[ind] += -Ao * exp( expArg );
 
 
                         ////////////////////////////////////////////
@@ -382,13 +370,9 @@ void Box::make_bias_field(
                         // Gaussian potential with std dev of 2 hard-coded for now
                         expArg = -mdr2 / 2.0 / variance;
 
-                        w[ind] += -Ao * exp( expArg ); 
+                        w[ind] += -Ao * exp( expArg );
 
-                        // fr[ind * Dim + 0] += -Ao * exp( expArg ) / variance * dr[0];
-                        // fr[ind * Dim + 1] += -Ao * exp( expArg ) / variance * dr[1];
-                        // fr[ind * Dim + 2] += -Ao * exp( expArg ) / variance * dr[2];
-
-                    }            
+                    }
                 }            
             }
         }// if phase == 1
@@ -411,13 +395,6 @@ void Box::make_bias_field(
             dim2_arg = 2.0f * PI * float(n_periods) / L[dim2];
 
             w[ind] = Ao * cos(dim1_arg * r[dim1]) * cos(dim2_arg * r[dim2]);
-
-            // if (Dim == 3)
-            //     fr[ind * Dim + dir] = 0.0f;
-
-            // fr[ind * Dim + dim1] = Ao * dim1_arg * sin(dim1_arg * r[dim1]) * cos(dim2_arg * r[dim2]);
-            // fr[ind * Dim + dim2] = Ao * dim2_arg * sin(dim2_arg * r[dim2]) * cos(dim1_arg * r[dim1]);
-
         }
 
         // GYR phase
@@ -439,15 +416,6 @@ void Box::make_bias_field(
                 + sin_dir[2] * cos_dir[0];
 
             w[ind] = Ao * (e_term * e_term - 1.44);
-
-            // fr[ind * Dim + 0] = -Ao * e_term * args[0] *
-            //     (cos_dir[0] * cos_dir[1] - sin_dir[2] * sin_dir[0]);
-
-            // fr[ind * Dim + 1] = -Ao * e_term * args[1] *
-            //     (cos_dir[1] * cos_dir[2] - sin_dir[0] * sin_dir[1]);
-
-            // fr[ind * Dim + 2] = -Ao * e_term * args[2] *
-            //     (cos_dir[2] * cos_dir[0] - sin_dir[1] * sin_dir[2]);
         }
 
         else {
@@ -503,7 +471,7 @@ Box* BoxFactory(std::istringstream &iss) {
         std::string s2 = s1 + " is not a valid box style yet";
         die(s2.c_str());
     }
-    return 0;
+    return nullptr;
 }
 
 
