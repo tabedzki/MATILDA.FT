@@ -60,15 +60,58 @@ class Box {
         virtual ~Box();
         void setDimension(int);
         
-        double get_kD(int, double*);        // Subroutine to compute wavevector corresponding to grid index
-        float get_kD(int, float*);        // Subroutine to compute wavevector corresponding to grid index
-        void get_r(int, double*);           // Subroutine to compute position corresponding to grid index
-        void get_r(int, float*);           // Subroutine to compute position corresponding to grid index
+        // For a given id \in [0,M), defines Fourier vector k
+        // Returns |k|^2
+        template<typename T>
+        T get_kD(int id, T* k) {
+            // id between 0 and M-1 (i value in loop), k = kx,ky,kz, Dim is dimensionality
+            T kmag = 0.0f;
+            int n[3];
 
-        void get_rf(int, float*);           // Subroutine to compute position corresponding to grid index
-        // template<typename T> T pbc_dr2(T*, const T*, const T*);
-        float pbc_dr2(float*, const float*, const float*);
-        double pbc_dr2(double*, const double*, const double*);
+            this->unstack2(id, n);
+
+            for (int i = 0; i < Dim; i++) {
+                if (float(n[i]) < float(Nx[i]) / 2.)
+                    k[i] = PI2 * float(n[i]) / L[i];
+
+                else
+                    k[i] = PI2 * float(n[i] - Nx[i]) / L[i];
+
+                kmag += k[i] * k[i];
+            }
+            return kmag;
+        }
+
+        // For given id \in [0,M), defines position vector for that grid point
+        template<typename T>
+        void get_r(int id, T* r) {
+            int n[3];
+
+            this->unstack2(id, n);
+
+            for (int i = 0; i < Dim; i++) {
+                r[i] = T(n[i]) * dx[i];
+            }
+        }
+
+        // For given id \in [0,M), defines position vector for that grid point
+        void get_rf(int id, float* r) { get_r(id, r); }
+
+        // Minimum-image separation dr = ri - rj; returns |dr|^2
+        template<typename T>
+        T pbc_dr2(T* dr, const T* ri, const T* rj) {
+            T mdr2 = 0.0;
+            for ( int j=0 ; j<Dim ; j++ ) {
+                dr[j] = ri[j] - rj[j];
+
+                if ( dr[j] > Lh[j] ) dr[j] -= L[j];
+                else if ( dr[j] < -Lh[j] ) dr[j] += L[j];
+
+                mdr2 += dr[j] * dr[j];
+            }
+
+            return mdr2;
+        }
 
         void make_bias_field(double*, const double, const std::string, const int, const int);
         
@@ -83,10 +126,32 @@ class Box {
         virtual int converged(int) = 0;
 
         void initBinaryDataFile(std::string);
-        void writeBinaryData(std::string, float*);
-        void writeBinaryData(std::string, double*);
-        void writeBinaryTensorData(std::string, float*);
-        void writeBinaryTensorData(std::string, double*);
+
+        // Writes a frame of data to the binary file
+        template<typename T>
+        void writeBinaryData(std::string name, T* dat) {
+            std::ofstream otp(name, std::ios::app|std::ios::binary);
+            if ( !otp.is_open() ) {
+                die("Failed to open output binary file!");
+            }
+
+            otp.write(reinterpret_cast<char*>(dat), M*sizeof(T));
+
+            otp.close();
+        }
+
+        // Writes a frame of tensor data to the binary file
+        template<typename T>
+        void writeBinaryTensorData(std::string name, T* dat) {
+            std::ofstream otp(name, std::ios::app|std::ios::binary);
+            if ( !otp.is_open() ) {
+                die("Failed to open output binary file!");
+            }
+
+            otp.write(reinterpret_cast<char*>(dat), Dim*Dim*M*sizeof(T));
+
+            otp.close();
+        }
 
         int known_phase(std::string, std::string&);
 
