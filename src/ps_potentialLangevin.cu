@@ -75,12 +75,12 @@ void Langevin::CalcForces() {
 
     noise_mag = sqrtf(2.0 *drag / delt );
 
-    int GRID = mybox->psGroup[Iind].Grid;
-    int BLOCK = mybox->psGroup[Iind].Block;
+    int GRID = mybox->psGroup[Iind]->Grid;
+    int BLOCK = mybox->psGroup[Iind]->Block;
     int Dim = mybox->returnDimension();
-    int ns = mybox->psGroup[Iind].nsites;
+    int ns = mybox->psGroup[Iind]->nsites;
 
-    d_add_Langevin_forces<<<GRID, BLOCK>>>(mybox->d_f, mybox->d_v, mybox->psGroup[Iind].d_siteList, drag, noise_mag,
+    d_add_Langevin_forces<<<GRID, BLOCK>>>(mybox->d_f, mybox->d_v, mybox->psGroup[Iind]->d_siteList, drag, noise_mag,
         Dim, ns, mybox->d_states);
 }
 

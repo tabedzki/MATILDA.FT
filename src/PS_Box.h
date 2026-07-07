@@ -147,7 +147,7 @@ class PS_Box : public Box {
 
 
         
-        std::vector<PS_Group> psGroup;          // Vector of particle groups
+        std::vector<PS_Group*> psGroup;         // Vector of particle groups
         
         std::vector<Integrator*> integrators;   // Time integration schemes
         std::vector<PS_Potential*> potentials;

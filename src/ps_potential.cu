@@ -27,8 +27,8 @@ void PS_Potential::initializePotential() {
     Jind = mybox->findGroupInteger(grpJ);
 
     // Allocate grid force memory for groups I, J if needed
-    if ( mybox->psGroup[Iind].hasForce() == 0 ) { mybox->psGroup[Iind].enableForce(); }
-    if ( mybox->psGroup[Jind].hasForce() == 0 ) { mybox->psGroup[Jind].enableForce(); }
+    if ( mybox->psGroup[Iind]->hasForce() == 0 ) { mybox->psGroup[Iind]->enableForce(); }
+    if ( mybox->psGroup[Jind]->hasForce() == 0 ) { mybox->psGroup[Jind]->enableForce(); }
 
 }
 
@@ -62,7 +62,7 @@ void PS_Potential::CalcForces() {
     ///////////////////////////////////////////////
 
     // Pointer to density field for J
-    d_rhoJ = mybox->psGroup[Jind].d_rho;
+    d_rhoJ = mybox->psGroup[Jind]->d_rho;
 
     // real(Alex) = rhoJ, imag(Alex) = 0.0
     d_floatToCpx<<<Grid, Block>>>(d_cpxAlex, d_rhoJ, M);
@@ -84,12 +84,12 @@ void PS_Potential::CalcForces() {
 
 
         // Gabe now contains the forces that act on particles I
-        mybox->psGroup[Iind].accumulateGridForceComp(d_Gabe, j);
+        mybox->psGroup[Iind]->accumulateGridForceComp(d_Gabe, j);
 
         // If the group acts on itself, simply accumulate the grid force twice
         if ( Iind == Jind ) {
             // Gabe now contains the forces that act on particles I
-            mybox->psGroup[Iind].accumulateGridForceComp(d_Gabe, j);
+            mybox->psGroup[Iind]->accumulateGridForceComp(d_Gabe, j);
         }
     }
     check_cudaError("Potential first force accumulation");
@@ -101,7 +101,7 @@ void PS_Potential::CalcForces() {
         // Forces acting on type J arise from type I //
         ///////////////////////////////////////////////
         // Pointer to density field for J
-        d_rhoI = mybox->psGroup[Iind].d_rho;
+        d_rhoI = mybox->psGroup[Iind]->d_rho;
 
         // real(Alex) = rhoI, imag(Alex) = 0.0
         d_floatToCpx<<<Grid, Block>>>(d_cpxAlex, d_rhoI, M);
@@ -118,7 +118,7 @@ void PS_Potential::CalcForces() {
             d_cpxToFloat<<<Grid, Block>>>(d_Gabe, d_cpxAlex, M);
 
             // Gabe now contains the forces that act on particles J
-            mybox->psGroup[Jind].accumulateGridForceComp(d_Gabe, j);
+            mybox->psGroup[Jind]->accumulateGridForceComp(d_Gabe, j);
         }
     }
 
@@ -150,7 +150,7 @@ float PS_Potential::CalcEnergy() {
 
 
     // Pointer to density field for J
-    d_rhoJ = mybox->psGroup[Jind].d_rho;
+    d_rhoJ = mybox->psGroup[Jind]->d_rho;
 
     // real(Alex) = rhoJ, imag(Alex) = 0.0
     d_floatToCpx<<<Grid, Block>>>(d_cpxAlex, d_rhoJ, M);
@@ -167,7 +167,7 @@ float PS_Potential::CalcEnergy() {
     d_cpxToFloat<<<Grid, Block>>>(d_Gabe, d_cpxAlex, M);
 
     // Alex = rhoI * Gabe
-    d_rhoI = mybox->psGroup[Iind].d_rho;
+    d_rhoI = mybox->psGroup[Iind]->d_rho;
     d_multiplyFloatByFloat<<<Grid, Block>>>(d_Alex, d_rhoI, d_Gabe, M);
 
     energy = mybox->gvol * mybox->sumDeviceArray(d_Alex, 

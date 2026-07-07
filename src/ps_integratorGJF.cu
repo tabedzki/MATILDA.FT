@@ -25,14 +25,14 @@ GJF::GJF(std::istringstream& iss, PS_Box* box) : Integrator(iss, box) {
 
 void GJF::Integrate_2(){
 
-	int grid = mybox->psGroup[group_index].Grid;
-	int block = mybox->psGroup[group_index].Block;
+	int grid = mybox->psGroup[group_index]->Grid;
+	int block = mybox->psGroup[group_index]->Block;
 
 
     d_GJF_integrator<<<grid, block>>>(mybox->d_x, d_xOld, d_noiseOld, mybox->d_f,
 		d_gjf_a, d_gjf_b, d_gjf_noiseMag, d_gjf_bdt2_over_m, d_gjf_bdt_over_2m,
-		mybox->d_intSpecies, mybox->d_L, mybox->psGroup[group_index].d_siteList,
-		mybox->psGroup[group_index].nsites, mybox->returnDimension(), mybox->d_states);
+		mybox->d_intSpecies, mybox->d_L, mybox->psGroup[group_index]->d_siteList,
+		mybox->psGroup[group_index]->nsites, mybox->returnDimension(), mybox->d_states);
 
 }
 

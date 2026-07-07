@@ -16,12 +16,12 @@ EM::EM(std::istringstream& iss, PS_Box* box) : Integrator(iss, box) {
 
 void EM::Integrate_2(){
 
-	int grid = mybox->psGroup[group_index].Grid;
-	int block = mybox->psGroup[group_index].Block;
+	int grid = mybox->psGroup[group_index]->Grid;
+	int block = mybox->psGroup[group_index]->Block;
 
     d_EM_integrator<<<grid, block>>>(mybox->d_x, mybox->d_f,
 		delt, sqrtf(2.0 * delt), mybox->d_intSpecies, mybox->d_L, 
-		mybox->psGroup[group_index].d_siteList, mybox->psGroup[group_index].nsites,
+		mybox->psGroup[group_index]->d_siteList, mybox->psGroup[group_index]->nsites,
 		mybox->returnDimension(), mybox->d_states);
 
 }

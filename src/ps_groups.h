@@ -48,6 +48,12 @@ class PS_Group {
         std::string returnName();
         virtual ~PS_Group();
 
+        // PS_Group owns raw host/device buffers; disallow copies so the
+        // owned pointers can't be double-freed. Stored by pointer in
+        // PS_Box::psGroup (see PS_Box.h), matching the potentials/integrators pattern.
+        PS_Group(const PS_Group&) = delete;
+        PS_Group& operator=(const PS_Group&) = delete;
+
 
         void zeroFields();                          // Zeroes density, force fields
         void allocateGroupMemory(int);              // Allocates arrays

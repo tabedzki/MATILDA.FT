@@ -23,12 +23,12 @@ void PS_ComputeSK::do_compute(int step) {
         cuComplex *d_tp1, *d_tp2;
 
         d_ftp = mybox->d_Alex;
-        d_rho = mybox->psGroup[group_int].d_rho;
+        d_rho = mybox->psGroup[group_int]->d_rho;
         d_tp1 = mybox->d_cpxAlex;
         d_tp2 = mybox->d_cpxGabe;
 
         // Pointer to density field 
-        d_rho = mybox->psGroup[group_int].d_rho;
+        d_rho = mybox->psGroup[group_int]->d_rho;
 
         // d_tp1 = d_rho
         d_floatToCpx<<<GRID, BLOCK>>>(d_tp1, d_rho, mybox->M);

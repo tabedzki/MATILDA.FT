@@ -107,10 +107,10 @@ void PS_Box::doTimeStep(int step) {
     // update the density fields
     for ( int i=0 ; i<psGroup.size(); i++ ) {
         // zero density, grid force fields
-        psGroup[i].zeroFields();
+        psGroup[i]->zeroFields();
 
         // Fill density fields
-        psGroup[i].makeDensityField();
+        psGroup[i]->makeDensityField();
     }
 
 
@@ -266,7 +266,7 @@ void PS_Box::forces() {
 
     // 2b. Grid forces --> particle forces
     for ( int i=0 ; i<psGroup.size() ; i++ ) {
-        psGroup[i].mapForces();
+        psGroup[i]->mapForces();
     }
 
 
@@ -376,8 +376,8 @@ void PS_Box::writeData(int step) {
 void PS_Box::writeFields() {
     if ( verbose ) std::cout << "  here: ps_box:writefields" << std::endl;
     for (int i=0 ; i<psGroup.size(); i++ ) {
-        // psGroup[i].writeDensityField();
-        psGroup[i].writeDensityFieldBinary();
+        // psGroup[i]->writeDensityField();
+        psGroup[i]->writeDensityFieldBinary();
         
         check_cudaError("writeFields in ps_box");
     }    
@@ -580,6 +580,7 @@ PS_Box::~PS_Box() {
     cudaFree(d_bondVirScratch);
     cudaFree(d_angleVirScratch);
     for ( int i=0 ; i<neighborLists.size(); i++ ) delete neighborLists[i];
+    for ( int i=0 ; i<psGroup.size(); i++ ) delete psGroup[i];
 }
 
 PS_Box::PS_Box(std::istringstream& iss ) : Box(iss) {
@@ -609,8 +610,8 @@ int PS_Box::findSpeciesInteger(std::string testLabel) {
 int PS_Box::findGroupInteger(std::string testLabel) {
     int id = -1;
     for ( int i=0 ; i<psGroup.size() ; i++ ) {
-        // std::cout << "PSBox findGroup: " << testLabel << " " << psGroup[i].returnName() << " " << psGroup[i].isGroup(testLabel) << std::endl;
-        if ( psGroup[i].isGroup( testLabel) ) {
+        // std::cout << "PSBox findGroup: " << testLabel << " " << psGroup[i]->returnName() << " " << psGroup[i]->isGroup(testLabel) << std::endl;
+        if ( psGroup[i]->isGroup( testLabel) ) {
             id = i;
             break;
         }

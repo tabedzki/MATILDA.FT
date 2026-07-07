@@ -157,7 +157,7 @@ PS_NeighborList::PS_NeighborList(std::istringstream& iss, PS_Box* box)
 
 void PS_NeighborList::initializeNList() {
     groupInd = mybox->findGroupInteger(grpName);
-    nsites   = mybox->psGroup[groupInd].nsites;
+    nsites   = mybox->psGroup[groupInd]->nsites;
 
     // Cell dimensions: at least 1 cell per axis
     float Lx = mybox->Lh[0] * 2.0f;
@@ -211,7 +211,7 @@ void PS_NeighborList::build() {
     // 1. Assign each particle to a cell
     d_assignCellIDs<<<nsGrd, nsBlk>>>(
         d_cellID, d_particleID,
-        mybox->psGroup[groupInd].d_siteList,
+        mybox->psGroup[groupInd]->d_siteList,
         mybox->d_x,
         cellWidthX, cellWidthY, cellWidthZ,
         nCellsX, nCellsY, nCellsZ,
@@ -255,7 +255,7 @@ void PS_NeighborList::build() {
 
     d_buildNeighborList<<<nsGrd, nsBlk>>>(
         d_neighborList, d_nNeighbors, d_overflow,
-        mybox->psGroup[groupInd].d_siteList,
+        mybox->psGroup[groupInd]->d_siteList,
         d_particleID_sorted, d_cellStart, d_cellEnd,
         mybox->d_x, mybox->d_L, mybox->d_Lh,
         rcut2, maxNeighbors,
