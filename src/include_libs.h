@@ -33,6 +33,7 @@ void check_cudaError(const char*);
 __global__ void d_multiplyDoubleCpxByCpxByCpxScalar(cuDoubleComplex*, const cuDoubleComplex*, 
         const cuDoubleComplex*, const cuDoubleComplex, const int);
 __global__ void d_multiplyDoubleCpxByCpx(cuDoubleComplex*, const cuDoubleComplex*, const cuDoubleComplex*, const int);
+__global__ void d_multiplyCuDoubleComplexByDouble(cuDoubleComplex*, const double, const int);
 
 
 __global__ void d_floatToCpx(cuComplex*, const float*, const int);

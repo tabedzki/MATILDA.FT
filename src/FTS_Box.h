@@ -71,7 +71,7 @@ class FTS_Box : public Box {
         void shuffleStorage(std::complex<double>*, std::complex<double>*, double*, double*);
 
         std::complex<double> integComplexD(std::complex<double>*);
-        thrust::complex<double> integTComplexD(thrust::host_vector<thrust::complex<double>>);
+        thrust::complex<double> integTComplexD(const thrust::host_vector<thrust::complex<double>>&);
         void writeComplexGridData(std::string, std::vector<std::complex<double>>);
         void writeTComplexGridData(std::string, thrust::host_vector<thrust::complex<double>>);
         void computeHomopolyDebye(thrust::host_vector<thrust::complex<double>>& , const double);
