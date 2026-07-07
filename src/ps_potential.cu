@@ -209,14 +209,14 @@ PS_Potential::PS_Potential(std::istringstream &iss, PS_Box* box) : mybox(box) {
     virk = (std::complex<float>*) malloc( M*nPC * sizeof(std::complex<float>));
 
     // Device real-space variables
-    cudaMalloc(&d_ur, M * sizeof(float));
-    cudaMalloc(&d_fI, M*Dim * sizeof(float));
-    cudaMalloc(&d_fJ, M*Dim * sizeof(float));
+    CUDA_CHECK(cudaMalloc(&d_ur, M * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_fI, M*Dim * sizeof(float)));
+    CUDA_CHECK(cudaMalloc(&d_fJ, M*Dim * sizeof(float)));
 
     // Device k-space variables
-    cudaMalloc(&d_uk,   M * sizeof(cuComplex));
-    cudaMalloc(&d_fk,   M*Dim * sizeof(cuComplex));
-    cudaMalloc(&d_virk, M*nPC * sizeof(cuComplex));
+    CUDA_CHECK(cudaMalloc(&d_uk,   M * sizeof(cuComplex)));
+    CUDA_CHECK(cudaMalloc(&d_fk,   M*Dim * sizeof(cuComplex)));
+    CUDA_CHECK(cudaMalloc(&d_virk, M*nPC * sizeof(cuComplex)));
     
     return;
 }
