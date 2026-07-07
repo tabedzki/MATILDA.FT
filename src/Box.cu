@@ -152,132 +152,9 @@ void Box::unstack2(int id, int* nn) {
         return;
     }
 }
-// For a given id \in [0,M), defines Fourier vector k
-// Returns |k|^2
-float Box::get_kD(int id, float* k) {
-    // id between 0 and M-1 (i value in loop), float k kx,ky,ky (that vector), Dim is dimensionality
-    // declare a vector for this
-    float kmag = 0.0f;
-    int i, *n;
-    n = new int[Dim];
-
-    this->unstack2(id, n);
-
-    for (i = 0; i < Dim; i++) {
-        if (float(n[i]) < float(Nx[i]) / 2.)
-            k[i] = PI2 * float(n[i]) / L[i];
-
-        else
-            k[i] = PI2 * float(n[i] - Nx[i]) / L[i];
-
-        kmag += k[i] * k[i];
-    }
-    delete n;
-    return kmag;
-
-}
-
-// For a given id \in [0,M), defines Fourier vector k
-// Returns |k|^2
-double Box::get_kD(int id, double* k) {
-    // id between 0 and M-1 (i value in loop), float k kx,ky,ky (that vector), Dim is dimensionality
-    // declare a vector for this
-    double kmag = 0.0f;
-    int i, *n;
-    n = new int[Dim];
-
-    this->unstack2(id, n);
-
-    for (i = 0; i < Dim; i++) {
-        if (float(n[i]) < float(Nx[i]) / 2.)
-            k[i] = PI2 * float(n[i]) / L[i];
-
-        else
-            k[i] = PI2 * float(n[i] - Nx[i]) / L[i];
-
-        kmag += k[i] * k[i];
-    }
-    delete n;
-    return kmag;
-
-}
-
-// For given id \in [0,M), defines position vector for that grid point
-void Box::get_r(int id, float *r) {
-    
-    int i, *n;
-    n = new int[Dim];
-
-    this->unstack2(id, n);
-   
-    for (i = 0; i < Dim; i++) {
-        r[i] = float(n[i]) * dx[i];
-    }
-
-    delete n;
-}
-
-// For given id \in [0,M), defines position vector for that grid point
-void Box::get_r(int id, double *r) {
-    
-    int i, *n;
-    n = new int[Dim];
-
-    this->unstack2(id, n);
-   
-    for (i = 0; i < Dim; i++) {
-        r[i] = double(n[i]) * dx[i];
-    }
-
-    delete n;
-}
-
-// For given id \in [0,M), defines position vector for that grid point
-void Box::get_rf(
-    int id,     // grid index \in [0,M)
-    float *r    // position array to be filled
-    ) {
-    
-    int i, *n;
-    n = new int[Dim];
-
-    this->unstack2(id, n);
-   
-    for (i = 0; i < Dim; i++) {
-        r[i] = float(n[i]) * dx[i];
-    }
-
-    delete n;
-}
-
-
-double Box::pbc_dr2(double* dr, const double* ri, const double* rj) {
-    double mdr2 = 0.0;
-    for ( int j=0 ; j<Dim ; j++ ) {
-        dr[j] = ri[j] - rj[j];
-
-        if ( dr[j] > Lh[j] ) dr[j] -= L[j];
-        else if ( dr[j] < -Lh[j] ) dr[j] += L[j];
-
-        mdr2 += dr[j] * dr[j];
-    }
-
-    return mdr2;
-}
-
-float Box::pbc_dr2(float* dr, const float* ri, const float* rj) {
-    float mdr2 = 0.0;
-    for ( int j=0 ; j<Dim ; j++ ) {
-        dr[j] = ri[j] - rj[j];
-
-        if ( dr[j] > Lh[j] ) dr[j] -= L[j];
-        else if ( dr[j] < -Lh[j] ) dr[j] += L[j];
-
-        mdr2 += dr[j] * dr[j];
-    }
-
-    return mdr2;
-}
+// get_kD, get_r, get_rf, and pbc_dr2 are defined as member function
+// templates in Box.h so a single implementation covers the float and
+// double variants.
 
 // checks to see if provided phase is known
 int Box::known_phase(std::string phase, std::string& name) {
@@ -559,64 +436,18 @@ void Box::initBinaryDataFile(std::string name) {
 
     otp.write(reinterpret_cast<char*>(&Dim), sizeof(int) );
 
-    int *nxt = new int[Dim];
+    int nxt[3];
     for ( int i=0 ; i<Dim ; i++ ) { nxt[i] = Nx[i]; }
 
     otp.write(reinterpret_cast<char*>(nxt), Dim*sizeof(int));
-
-    delete(nxt);
 
     otp.write(reinterpret_cast<char*>(L), Dim*sizeof(float));
 }
 
 
-// Writes a frame of data to the binary file
-void Box::writeBinaryData(std::string name, float *dat) {
-    std::ofstream otp(name, std::ios::app|std::ios::binary);
-    if ( !otp.is_open() ) {
-        die("Failed to open output binary file!");
-    }
-
-    otp.write(reinterpret_cast<char*>(dat), M*sizeof(float));
-
-    otp.close();
-}
-
-// Writes a frame of data to the binary file
-void Box::writeBinaryData(std::string name, double *dat) {
-    std::ofstream otp(name, std::ios::app|std::ios::binary);
-    if ( !otp.is_open() ) {
-        die("Failed to open output binary file!");
-    }
-
-    otp.write(reinterpret_cast<char*>(dat), M*sizeof(double));
-
-    otp.close();
-}
-
-// Writes a frame of data to the binary file
-void Box::writeBinaryTensorData(std::string name, float *dat) {
-    std::ofstream otp(name, std::ios::app|std::ios::binary);
-    if ( !otp.is_open() ) {
-        die("Failed to open output binary file!");
-    }
-
-    otp.write(reinterpret_cast<char*>(dat), Dim*Dim*M*sizeof(float));
-
-    otp.close();
-}
-
-// Writes a frame of data to the binary file
-void Box::writeBinaryTensorData(std::string name, double *dat) {
-    std::ofstream otp(name, std::ios::app|std::ios::binary);
-    if ( !otp.is_open() ) {
-        die("Failed to open output binary file!");
-    }
-
-    otp.write(reinterpret_cast<char*>(dat), Dim*Dim*M*sizeof(double));
-
-    otp.close();
-}
+// writeBinaryData and writeBinaryTensorData are defined as member
+// function templates in Box.h so a single implementation covers the
+// float and double variants.
 
 
 void Box::readDatFile( std::string name, thrust::host_vector<thrust::complex<double>>& w) {
