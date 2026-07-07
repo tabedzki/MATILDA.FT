@@ -36,6 +36,12 @@ private:
     int*  d_particleID_sorted;  // [nsites] global IDs sorted by cellID (CUB sort output)
     int*  d_cellStart;      // [nCells]
     int*  d_cellEnd;        // [nCells]
+
+    void*  d_cubTemp = nullptr;   // cached CUB DeviceRadixSort temp storage
+    size_t cubTempBytes = 0;
+
+    int*  d_overflow = nullptr;   // [1] overflow flag, reused each build()
+    bool  overflowWarned = false; // rate-limit the overflow warning
 };
 
 #endif
