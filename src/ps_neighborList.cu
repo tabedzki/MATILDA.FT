@@ -189,6 +189,18 @@ void PS_NeighborList::initializeNList() {
     cudaMalloc(&d_cellEnd,          nCells * sizeof(int));
     cudaMalloc(&d_neighborList,     nsites * maxNeighbors * sizeof(int));
     cudaMalloc(&d_nNeighbors,       nsites * sizeof(int));
+
+    // Query CUB DeviceRadixSort's required temp-storage size once and cache
+    // the allocation. This depends only on element count/type, both of
+    // which are fixed for the lifetime of this object after initialization.
+    cub::DeviceRadixSort::SortPairs(
+        d_cubTemp, cubTempBytes,
+        d_cellID, d_cellID_sorted,
+        d_particleID, d_particleID_sorted,
+        nsites);
+    cudaMalloc(&d_cubTemp, cubTempBytes);
+
+    cudaMalloc(&d_overflow, sizeof(int));
 }
 
 PS_NeighborList::~PS_NeighborList() {
@@ -200,6 +212,8 @@ PS_NeighborList::~PS_NeighborList() {
     cudaFree(d_cellEnd);
     cudaFree(d_neighborList);
     cudaFree(d_nNeighbors);
+    cudaFree(d_cubTemp);
+    cudaFree(d_overflow);
 }
 
 
@@ -220,24 +234,13 @@ void PS_NeighborList::build() {
     // 2. Sort particles by cell ID using CUB DeviceRadixSort (out-of-place).
     // CUB is used directly instead of Thrust to avoid execution-policy issues
     // that cause cudaErrorInvalidValue with some CUDA/WSL2 driver combinations.
-    {
-        void*  d_temp       = nullptr;
-        size_t temp_bytes   = 0;
-        // First call: query required temp-storage size
-        cub::DeviceRadixSort::SortPairs(
-            d_temp, temp_bytes,
-            d_cellID, d_cellID_sorted,
-            d_particleID, d_particleID_sorted,
-            nsites);
-        cudaMalloc(&d_temp, temp_bytes);
-        // Second call: perform the sort
-        cub::DeviceRadixSort::SortPairs(
-            d_temp, temp_bytes,
-            d_cellID, d_cellID_sorted,
-            d_particleID, d_particleID_sorted,
-            nsites);
-        cudaFree(d_temp);
-    }
+    // Temp storage is queried and allocated once in initializeNList() and
+    // reused here to avoid a per-step cudaMalloc/cudaFree.
+    cub::DeviceRadixSort::SortPairs(
+        d_cubTemp, cubTempBytes,
+        d_cellID, d_cellID_sorted,
+        d_particleID, d_particleID_sorted,
+        nsites);
     check_cudaError("PS_NeighborList::CUB sort");
 
     // 3. Mark cell boundaries (uses sorted arrays)
@@ -249,8 +252,6 @@ void PS_NeighborList::build() {
     cudaMemset(d_nNeighbors, 0, nsites * sizeof(int));
 
     int h_overflow = 0;
-    int* d_overflow;
-    cudaMalloc(&d_overflow, sizeof(int));
     cudaMemset(d_overflow, 0, sizeof(int));
 
     d_buildNeighborList<<<nsGrd, nsBlk>>>(
@@ -264,9 +265,11 @@ void PS_NeighborList::build() {
         Dim, nsites);
 
     cudaMemcpy(&h_overflow, d_overflow, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFree(d_overflow);
 
-    if (h_overflow)
+    if (h_overflow && !overflowWarned) {
+        overflowWarned = true;
         std::cout << "WARNING: PS_NeighborList: some particles exceeded maxNeighbors="
-                  << maxNeighbors << "; increase maxNeighbors to avoid truncation." << std::endl;
+                  << maxNeighbors << "; increase maxNeighbors to avoid truncation"
+                  << "; further warnings suppressed." << std::endl;
+    }
 }
