@@ -8,6 +8,7 @@
 
 #include "include_libs.h"
 #include "constants.h"
+#include <chrono>
 
 class Box {
     protected:
@@ -39,10 +40,16 @@ class Box {
         int totSteps;                       // Total elapsed iterations
         int maxSteps;                       // Max number of steps to run
         int threads;                        // number of threads per GPU block
-        long int simTime;                   // Total simulation time
-        long int ftTimer;                   // Time spent in FFT routine
-        long int ioTimer;                   // Time in I/O routines
+        std::chrono::steady_clock::time_point simTime; // Wall-clock mark of run start
+        double ftTimer;                     // Time spent in FFT routine, in seconds
+        double ioTimer;                     // Time in I/O routines, in seconds
         int blockSize;                      // GPU block size
+
+        // Returns elapsed wall-clock time, in seconds, since `since`.
+        // Small helper to keep timer accumulation call sites tidy.
+        static double elapsed(const std::chrono::steady_clock::time_point& since) {
+            return std::chrono::duration<double>(std::chrono::steady_clock::now() - since).count();
+        }
 
         cufftHandle fftplan, fftplanSingle; // FFT Plans
         void cufftWrapperDouble(thrust::device_vector<thrust::complex<double>>,

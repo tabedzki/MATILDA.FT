@@ -79,8 +79,8 @@ void Box::cufftWrapperDouble(
     const int fftDir)      // fftDir = 1 for forward, -1 for backwards FFT
     {
 
-    int startTime = time(0);
-	
+    auto startTime = std::chrono::steady_clock::now();
+
     cuDoubleComplex* _in = (cuDoubleComplex*)thrust::raw_pointer_cast(in.data());
     cuDoubleComplex* _out = (cuDoubleComplex*)thrust::raw_pointer_cast(out.data());
 
@@ -90,17 +90,17 @@ void Box::cufftWrapperDouble(
         // Normalize the FT
         thrust::device_vector<thrust::complex<double>> norm(M);
         thrust::fill(norm.begin(), norm.end(), 1.0/double(M));
-        
-        thrust::transform(out.begin(), out.end(), norm.begin(), out.begin(), 
+
+        thrust::transform(out.begin(), out.end(), norm.begin(), out.begin(),
             thrust::multiplies<thrust::complex<double>>());
     }
 
     else if ( fftDir == -1 ) {
-        cufftExecZ2Z(fftplan, _in, _out, CUFFT_INVERSE);        
+        cufftExecZ2Z(fftplan, _in, _out, CUFFT_INVERSE);
     }
 
 
-    ftTimer += time(0) - startTime;
+    ftTimer += Box::elapsed(startTime);
 }
 
 // Takes cuComplex data structure and either FFT or inverse FFTs it
@@ -110,8 +110,7 @@ void Box::cufftWrapperSingle(
     const int fftDir)       // fftDir = 1 for forward, -1 for backwards FFT
     {
 
-    int startTime = time(0);
-	
+    auto startTime = std::chrono::steady_clock::now();
 
     if ( fftDir == 1 ) {
         cufftExecC2C(fftplanSingle, in, out, CUFFT_FORWARD);
@@ -119,11 +118,11 @@ void Box::cufftWrapperSingle(
     }
 
     else if ( fftDir == -1 ) {
-        cufftExecC2C(fftplanSingle, in, out, CUFFT_INVERSE); 
-        check_cudaError("inverse FFT");       
+        cufftExecC2C(fftplanSingle, in, out, CUFFT_INVERSE);
+        check_cudaError("inverse FFT");
     }
 
-    ftTimer += time(0) - startTime;
+    ftTimer += Box::elapsed(startTime);
 }
 
 

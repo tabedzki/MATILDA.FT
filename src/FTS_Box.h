@@ -46,8 +46,8 @@ class FTS_Box : public Box {
         std::vector<FTS_Species> Species;       // Contains the density of each species
         std::vector<FTS_Molec*> Molecs;         // Calculates properties of each species
         std::vector<FTS_Potential*> Potentials; // Stores and updates potentials
-        long int speciesTimer, moleculeTimer;  // stores time spent in various algorithms
-        long int fieldUpdateTimer;              
+        double speciesTimer, moleculeTimer;  // stores time spent in various algorithms, in seconds
+        double fieldUpdateTimer;             // in seconds
 
         std::ofstream OTP;
         std::string returnFTSstyle();

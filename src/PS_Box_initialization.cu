@@ -340,7 +340,7 @@ void PS_Box::readInput(std::ifstream& inp) {
     check_cudaError("end of parsing input");
 
     finishInitialization();
-    simTime = time(0);
+    simTime = std::chrono::steady_clock::now();
 
 }// End of readInput()
 
