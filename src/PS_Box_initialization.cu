@@ -107,7 +107,14 @@ void PS_Box::readInput(std::ifstream& inp) {
 
             }
 
-            else if ( firstWord == "blocksize" || firstWord == "blockSize" ) { iss >> blockSize ; }
+            else if ( firstWord == "blocksize" || firstWord == "blockSize" ) {
+                iss >> blockSize;
+                if ( blockSize < 32 || blockSize > 1024 || blockSize % 32 != 0 ) {
+                    std::string bserror = "Invalid blocksize: " + std::to_string(blockSize) +
+                        ". blockSize must be a multiple of the CUDA warp size (32), between 32 and 1024.";
+                    die(bserror);
+                }
+            }
 
 
             else if ( firstWord == "bond" ) {

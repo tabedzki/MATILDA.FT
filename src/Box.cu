@@ -8,7 +8,6 @@
 
 void die(const char*);
 __global__ void d_multiplyCuComplexByFloat(cuComplex*, const float, const int);
-__global__ void sumCpxDoubleArrayKernel(cuDoubleComplex*, cuDoubleComplex*, int);
 
 __global__ void init_devCuRand(unsigned int, curandState*, int);
 
@@ -507,45 +506,21 @@ Box* BoxFactory(std::istringstream &iss) {
 }
 
 
+// Performs data reduction on device array d_dat.
+// blockSize is unused (kept so call sites don't need to change); the
+// reduction is now delegated entirely to thrust::reduce.
 std::complex<double> Box::sumCpxDoubleDeviceArray(
     cuDoubleComplex *d_dat,   // [N] array to be summed
-    int blockSize,  // blockSize for CUDA calls
+    int blockSize,  // unused, kept for signature compatibility
     int N           // array size
     ) {
 
-    die("sumCpxDoubleDeviceArray needs further debugging");
+    thrust::complex<double> totalSum = thrust::reduce(
+        thrust::device_pointer_cast((thrust::complex<double>*)d_dat),
+        thrust::device_pointer_cast((thrust::complex<double>*)d_dat) + N,
+        thrust::complex<double>(0.0, 0.0));
 
-    cuDoubleComplex *d_output;
-    int numBlocks = (N + blockSize - 1) / blockSize;
-    cuDoubleComplex *h_output;// = new float[numBlocks];
-    h_output = (cuDoubleComplex*) malloc(numBlocks * sizeof(cuDoubleComplex));
-
-    // Allocate device memory
-    cudaMalloc(&d_output, numBlocks * sizeof(cuDoubleComplex));
-    
-    // Launch kernel
-    sumCpxDoubleArrayKernel<<<numBlocks, blockSize, blockSize * sizeof(cuDoubleComplex)>>>(
-        d_dat, d_output, N);
-
-   
-    check_cudaError("sumDevArray");
-    cudaDeviceSynchronize();
-
-    // Copy partial results back to host
-    cudaMemcpy(h_output, d_output, numBlocks * sizeof(cuDoubleComplex), cudaMemcpyDeviceToHost);
-    
-    // Sum up partial results on CPU
-    std::complex<double> totalSum(0.0, 0.0);
-    
-    for(int i = 0; i < numBlocks; i++) {
-        totalSum += std::complex<double>(h_output[i].x, h_output[i].y);
-    }
-    
-    // Cleanup
-    cudaFree(d_output);
-    free(h_output);
-    
-    return totalSum;
+    return std::complex<double>(totalSum.real(), totalSum.imag());
 }
 
 // Initializes binary output file. Should be called after
