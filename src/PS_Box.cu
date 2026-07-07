@@ -166,7 +166,7 @@ void PS_Box::doTimeStep(int step) {
     ///////////////
 
     // Write log data
-    int startTime = time(0);
+    auto startTime = std::chrono::steady_clock::now();
     if ( step % logFreq == 0 ) {
         if ( verbose ) { std::cout << "log..." ; fflush(stdout); }
         writeData(step);
@@ -202,7 +202,7 @@ void PS_Box::doTimeStep(int step) {
             fieldFreq = int( float(fieldFreq) * logScaleFields );
         }
     }
-    ioTimer += time(0) - startTime;
+    ioTimer += Box::elapsed(startTime);
 
 } // doTimeStep
 
@@ -562,13 +562,13 @@ void PS_Box::writeKFieldFloat(const char* name, const float* dat) {
 
 void PS_Box::writeTime() {
 
-    int dt = time(0) - simTime;
+    int dt = int(Box::elapsed(simTime));
     std::cout << "Total simulation time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
-    
-    dt = ftTimer;
+
+    dt = int(ftTimer);
     std::cout << "Total FT time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 
-    dt = ioTimer;
+    dt = int(ioTimer);
     std::cout << "Total I/O time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 
 }

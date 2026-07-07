@@ -21,29 +21,29 @@ void FTS_Box::doTimeStep(int step) {
     // std::cout << "doing time step" << std::endl;
     // Update the potential fields
     for ( int i=0 ; i<Potentials.size(); i++ ) {
-        int ti = time(0);
+        auto ti = std::chrono::steady_clock::now();
         Potentials[i]->updateFields();
-        fieldUpdateTimer += time(0) - ti;
+        fieldUpdateTimer += Box::elapsed(ti);
     }
-    
+
     // std::cout << "potentials updated" << std::endl;
 
 
     // Zero the species densities and rebuilt the fields
     for ( int i=0 ; i<Species.size(); i++ ) {
-        int ti = time(0);
+        auto ti = std::chrono::steady_clock::now();
         Species[i].zeroDensity();
         Species[i].buildPotentialField();
-        speciesTimer += time(0) - ti;
+        speciesTimer += Box::elapsed(ti);
     }
 
     // std::cout << "species fields zeroed" << std::endl;
 
     // Recalculate all density fields, including populating species densities
     for ( int i=0 ; i<Molecs.size(); i++ ) {
-        int ti = time(0);
+        auto ti = std::chrono::steady_clock::now();
         Molecs[i]->calcDensity();
-        moleculeTimer += time(0) - ti;
+        moleculeTimer += Box::elapsed(ti);
     }
 
     // std::cout << "densities calculated" << std::endl;
@@ -53,25 +53,25 @@ void FTS_Box::doTimeStep(int step) {
     if ( PCflag == true ) {
         // Update the potential fields with corrector step
         for ( int i=0 ; i<Potentials.size(); i++ ) {
-            int ti = time(0);
+            auto ti = std::chrono::steady_clock::now();
             Potentials[i]->correctFields();
-            fieldUpdateTimer += time(0) - ti;
+            fieldUpdateTimer += Box::elapsed(ti);
         }
-        
+
         // Zero the species densities and rebuilt the fields
         for ( int i=0 ; i<Species.size(); i++ ) {
-            int ti = time(0);
+            auto ti = std::chrono::steady_clock::now();
             Species[i].zeroDensity();
             Species[i].buildPotentialField();
-            speciesTimer += time(0) - ti;
+            speciesTimer += Box::elapsed(ti);
         }
 
         // Recalculate all density fields, including populating species densities
         for ( int i=0 ; i<Molecs.size(); i++ ) {
-            int ti = time(0);
+            auto ti = std::chrono::steady_clock::now();
             Molecs[i]->calcDensity();
-            moleculeTimer += time(0) - ti;
-        }        
+            moleculeTimer += Box::elapsed(ti);
+        }
     }// if ( predictorCorrector )
 
 
@@ -496,7 +496,7 @@ void FTS_Box::readInput(std::ifstream& inp) {
         std::cout << "Using Nr = " << Nr << ", computed rho0 = " << rho0 << " [Rg^-D]" << std::endl;
     }
 
-    simTime = time(0);
+    simTime = std::chrono::steady_clock::now();
     ftTimer = speciesTimer = moleculeTimer = fieldUpdateTimer = 0;
 
     // Initialize linear coeffs
@@ -518,19 +518,19 @@ void FTS_Box::readInput(std::ifstream& inp) {
 void FTS_Box::writeTime() {
 
     std::cout << std::endl;
-    int dt = time(0) - simTime;
+    int dt = int(Box::elapsed(simTime));
     std::cout << "Total simulation time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
-    
-    dt = ftTimer;
+
+    dt = int(ftTimer);
     std::cout << "Total FT time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 
-    dt = fieldUpdateTimer;
+    dt = int(fieldUpdateTimer);
     std::cout << "Total Field Update time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 
-    dt = speciesTimer;
+    dt = int(speciesTimer);
     std::cout << "Total species class time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 
-    dt = moleculeTimer;
+    dt = int(moleculeTimer);
     std::cout << "Total molecule class time: " << dt / 60 << "m" << dt % 60 << "sec" << std::endl;
 }
 
