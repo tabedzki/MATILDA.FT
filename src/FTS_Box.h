@@ -72,12 +72,35 @@ class FTS_Box : public Box {
 
         std::complex<double> integComplexD(std::complex<double>*);
         thrust::complex<double> integTComplexD(thrust::host_vector<thrust::complex<double>>);
-        void writeComplexGridData(std::string, std::vector<std::complex<double>>);
-        void writeTComplexGridData(std::string, thrust::host_vector<thrust::complex<double>>);
+        void writeComplexGridData(std::string, const std::vector<std::complex<double>>&);
+        void writeTComplexGridData(std::string, const thrust::host_vector<thrust::complex<double>>&);
         void computeHomopolyDebye(thrust::host_vector<thrust::complex<double>>& , const double);
         void computeIntRABlockDebye(thrust::host_vector<thrust::complex<double>>&, const double, const double);
-        void computeIntERBlockDebye(thrust::host_vector<thrust::complex<double>>&, const double, 
+        void computeIntERBlockDebye(thrust::host_vector<thrust::complex<double>>&, const double,
             const double, const double, const double);
+
+    private:
+        // Shared implementation for the complex grid-data writers.
+        // ElementT must provide .real() and .imag() (std::complex, thrust::complex).
+        template <typename ElementT>
+        void writeComplexGridDataImpl(const std::string& name, const ElementT* field) {
+            FILE* otp = fopen(name.c_str(), "w");
+
+            double r[3];
+            int nn[3];
+            for ( int i=0 ; i<M; i++ ) {
+                get_r(i,r);
+                unstack2(i,nn);
+
+                for ( int j=0 ; j<Dim ; j++ ) fprintf(otp, "%lf ", r[j]);
+
+                fprintf(otp, "%1.4e %1.4e\n", field[i].real(), field[i].imag());
+
+                if ( Dim == 2 && nn[0] == (Nx[0]-1) ) fprintf(otp,"\n");
+            }
+
+            fclose(otp);
+        }
 };
 
 #endif // FTS_BOX

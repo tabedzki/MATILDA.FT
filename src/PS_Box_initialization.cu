@@ -171,11 +171,10 @@ void PS_Box::readInput(std::ifstream& inp) {
             else if ( firstWord == "fieldFreq" || firstWord == "field_freq" ) {
                 iss >> fieldFreq;
 
-                if ( iss.tellg() != -1 ) {
-                    std::string tps;
-                    iss >> tps;
+                std::string tps;
+                if ( iss >> tps ) {
                     if ( tps != "logspace" && tps != "log_space" && tps != "logSpace") {
-                        die("PS_Box_init::readInput: invalid option to gsdFreq");
+                        die("PS_Box_init::readInput: invalid option to fieldFreq");
                     }
                     logSpaceFieldflag = 1;
                     iss >> logScaleFields;
@@ -199,9 +198,8 @@ void PS_Box::readInput(std::ifstream& inp) {
             else if ( firstWord == "gsdFreq" || firstWord == "gsd_freq" ) {
                 iss >> gsdFreq;
 
-                if ( iss.tellg() != -1 ) {
-                    std::string tps;
-                    iss >> tps ;
+                std::string tps;
+                if ( iss >> tps ) {
                     if ( tps != "logspace" && tps != "log_space" && tps != "logSpace") {
                         die("PS_Box_init::readInput: invalid option to gsdFreq");
                     }

@@ -389,29 +389,8 @@ void PS_Box::writeFields() {
 
 
 // Write field of thrust vectors
-void PS_Box::writeFieldTFloat(const char* name, thrust::host_vector<float> dat) {
-    int i, j, * nn;
-    nn = new int[Dim];
-    FILE* otp;
-    float* r = new float [Dim];
-
-
-    otp = fopen(name, "w");
-
-    for (i = 0; i < M; i++) {
-        get_rf(i, r);
-        unstack2(i, nn);
-
-        for (j = 0; j < Dim; j++)
-            fprintf(otp, "%f ", r[j]);
-
-        fprintf(otp, "%1.8e \n", dat[i]);
-
-        if (Dim == 2 && nn[0] == Nx[0] - 1)
-            fprintf(otp, "\n");
-    }
-
-    fclose(otp);
+void PS_Box::writeFieldTFloat(const char* name, const thrust::host_vector<float>& dat) {
+    writeFieldFloat(name, thrust::raw_pointer_cast(dat.data()));
 }
 
 // Host endianness check; legacy VTK BINARY requires big-endian payloads.
@@ -469,10 +448,9 @@ void PS_Box::writeFieldVTK(const char* name, const float* dat) {
 
 // write field of array vectors
 void PS_Box::writeFieldFloat(const char* name, const float* dat) {
-    int i, j, * nn;
-    nn = new int[Dim];
+    int i, j, nn[3];
     FILE* otp;
-    float* r = new float [Dim];
+    float r[3];
 
     otp = fopen(name, "w");
     if ( otp == NULL ) { die("Failed to open output file in writeFieldFloat!"); }
@@ -491,17 +469,13 @@ void PS_Box::writeFieldFloat(const char* name, const float* dat) {
     }
 
     fclose(otp);
-
-    delete nn;
-    delete r;
 }
 
 // write field of array vectors
 void PS_Box::writeKFieldFloat(const char* name, const std::complex<float>* dat) {
-    int i, j, * nn;
-    nn = new int[Dim];
+    int i, j, nn[3];
     FILE* otp;
-    float* kv = new float [Dim];
+    float kv[3];
     float k2;
 
     otp = fopen(name, "w");
@@ -521,18 +495,14 @@ void PS_Box::writeKFieldFloat(const char* name, const std::complex<float>* dat) 
     }
 
     fclose(otp);
-
-    delete nn;
-    delete kv;
 }
 
 
 // write field of array vectors
 void PS_Box::writeKFieldFloat(const char* name, const float* dat) {
-    int i, j, * nn;
-    nn = new int[Dim];
+    int i, j, nn[3];
     FILE* otp;
-    float* kv = new float [Dim];
+    float kv[3];
     float k2;
 
     otp = fopen(name, "w");
@@ -552,9 +522,6 @@ void PS_Box::writeKFieldFloat(const char* name, const float* dat) {
     }
 
     fclose(otp);
-
-    delete nn;
-    delete kv;
 }
 
 
