@@ -1,10 +1,8 @@
 # Spinodal demixing of a binary blend using the DPD thermostat.
 #
-# NOTE: On the current source tree the "potential dpd ..." line aborts during
-# parsing (ps_potentialDPD.cu: the optional-argument loop leaves the input
-# stringstream in a failed state, which ramp_check_input then rejects with
-# "failed to properly read").  This is a source-side bug, not stale input --
-# the syntax below is the correct current format.  See README.txt.
+# NOTE: this input needs the parser fix from issue #21 / PR #24; without it
+# the "potential dpd ..." line aborts with "failed to properly read".
+# The syntax below is the correct current format.  See README.txt.
 box ps
 Dim 2
 grid 75 75

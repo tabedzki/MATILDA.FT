@@ -10,7 +10,8 @@ The input file in this folder has been modernized to the current input format
 as a best effort: it runs the same 10-particle system as a plain soft-sphere
 (Gaussian) melt so that the example still exercises the current parser and
 runs to completion.  The dynamic-bond / induced-charge physics is not
-included because the feature has been removed from the code.
+included because the feature has been removed from the code; issue #23
+tracks reimplementing it.
 
 Run with:
 

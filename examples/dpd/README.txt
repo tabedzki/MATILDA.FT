@@ -9,9 +9,7 @@ Run with:
 (The old "-particle" flag no longer exists; the box type is selected by the
 "box ps" line inside the input file.)
 
-KNOWN ISSUE (current source tree): the "potential dpd ..." command aborts
-during input parsing.  ps_potentialDPD.cu reads its optional arguments with a
-loop that leaves the input stringstream in a failed state, and the subsequent
-ramp_check_input() call then dies with "failed to properly read".  This is a
-source-side bug rather than stale input syntax; the input file here uses the
-correct current DPD syntax and will run once that parser bug is fixed.
+KNOWN ISSUE: on source trees without the fix for issue #21 (PR #24), the
+"potential dpd ..." command aborts during input parsing with "failed to
+properly read" — a source-side parser bug, not stale input syntax.  The input
+file here uses the correct current DPD syntax and runs once that fix is in.
