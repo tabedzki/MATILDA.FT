@@ -14,13 +14,13 @@ GJF::~GJF(){
     cudaFree(d_gjf_bdt_over_2m);
 }
 
-GJF::GJF(std::istringstream& iss, PS_Box* box) : Integrator(iss, box) {
-
-	int nDOF = mybox->nstot * mybox->returnDimension();
-
-	cudaMalloc(&d_xOld, nDOF * sizeof(float));
-	cudaMalloc(&d_noiseOld, nDOF * sizeof(float));
-
+// Device arrays are allocated in finishInitialization(), not here: at parse
+// time nstot is only known if readData has already been processed, and the
+// input file should not have to order the integrator line after it.
+GJF::GJF(std::istringstream& iss, PS_Box* box) : Integrator(iss, box),
+	d_xOld(nullptr), d_noiseOld(nullptr),
+	d_gjf_a(nullptr), d_gjf_b(nullptr), d_gjf_noiseMag(nullptr),
+	d_gjf_bdt2_over_m(nullptr), d_gjf_bdt_over_2m(nullptr) {
 }
 
 void GJF::Integrate_2(){
@@ -43,6 +43,9 @@ void GJF::Integrate_2(){
 void GJF::finishInitialization() {
 
 	int nDOF = mybox->nstot * mybox->returnDimension();
+
+	cudaMalloc(&d_xOld, nDOF * sizeof(float));
+	cudaMalloc(&d_noiseOld, nDOF * sizeof(float));
 
 	// Initialize 'old' positions to current positions
 	cudaMemcpy(d_xOld, mybox->d_x, nDOF*sizeof(float), cudaMemcpyDeviceToDevice);
