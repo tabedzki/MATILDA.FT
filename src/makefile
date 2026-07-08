@@ -30,13 +30,16 @@ CC = ${CUDA_LOC}/bin/nvcc
 # makefile works across toolkit versions without editing.
 CUDA_ARCHS ?= detect
 
-# Curated portable set: K80 (37), P100 (60), V100 (70), A100 (80), H100 (90).
+# Everything the installed nvcc can generate code for, and the newest of them
+NVCC_ARCHS  := $(patsubst compute_%,%,$(shell ${CC} --list-gpu-arch 2>/dev/null))
+NEWEST_NVCC := $(lastword $(shell printf '%s\n' ${NVCC_ARCHS} | sort -n))
+
+# Curated portable set: K80 (37), P100 (60), V100 (70), A100 (80), H100 (90),
+# plus whatever the newest architecture of the installed CUDA release is, so
+# the fat binary always carries native code for the latest supported GPUs.
 # In-between cards run the nearest lower entry of the same major version
 # (e.g. sm_86 runs the sm_80 cubin); newer ones JIT the embedded PTX.
-FAT_ARCHS = 37 60 70 80 90
-
-# Everything the installed nvcc can generate code for
-NVCC_ARCHS := $(patsubst compute_%,%,$(shell ${CC} --list-gpu-arch 2>/dev/null))
+FAT_ARCHS := $(shell printf '%s\n' 37 60 70 80 90 ${NEWEST_NVCC} | sort -un)
 
 ifeq (${CUDA_ARCHS},detect)
   REQUESTED := $(shell nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | tr -d . | sort -un)
