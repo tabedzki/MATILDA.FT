@@ -1,0 +1,11 @@
+box ps
+Dim 2
+randSeed -778
+species A
+species B
+readData ps2d.data
+grid 24 24
+integrator all VV
+neighbor_list all 1.5
+potential gaussian A B 1.0 1.0
+endBox
