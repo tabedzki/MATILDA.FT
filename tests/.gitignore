@@ -1,0 +1,4 @@
+# the root .gitignore ignores "makefile" globally; ours is source, keep it
+!makefile
+build/
+matilda_tests

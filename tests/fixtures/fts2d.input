@@ -1,0 +1,24 @@
+# Minimal 2D SCFT fixture for the FTS_Box tests: a symmetric A/B homopolymer
+# blend with Helfand (compressibility) + Flory (chi) potentials, modeled on
+# examples/ft/input but on a smaller 32x32 grid for speed.
+#
+# NOTE: the shipped examples/ft/input is stale relative to the current
+# parsers: it says "molecule linear 0.5 ..." where FTS_Molec now requires
+# an explicit keyword ("molecule linear phi 0.5 ..."), and it contains a
+# "maxSteps" line that FTS_Box::readInput() rejects with die(). This
+# fixture uses the current syntax.
+box fts scft
+Dim 2
+grid 32 32
+boxLengths 16.0 16.0
+species A
+species B
+Nr 50
+rho0 50
+molecule linear phi 0.5 1 25 A smear Gaussian 0.15
+molecule linear phi 0.5 1 25 B
+potential Helfand 50.0 0.1 modify zeromean updateScheme 1S
+potential Flory A B 2.9 0.1 0.01 initialize sin 0 0.2 1.0 updateScheme 1S
+logFreq 500
+randSeed 8675309
+endBox

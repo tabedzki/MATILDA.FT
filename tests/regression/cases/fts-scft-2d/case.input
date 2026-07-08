@@ -1,0 +1,26 @@
+# Golden-file regression case: 2D SCFT of a symmetric A/B homopolymer blend,
+# adapted from examples/ft/input (updated to the current parser syntax:
+# "molecule linear phi ...", no in-box maxSteps, top-level "run nvt").
+# Grid reduced 125^2 -> 48^2 to keep the golden files small; 200 steps is
+# enough to exercise the Helfand+Flory update path well past initialization.
+box fts scft
+Dim 2
+grid 48 48
+boxLengths 20.0 20.0
+species A
+species B
+Nr 50
+rho0 50
+
+molecule linear phi 0.5 1 25 A smear Gaussian 0.15
+molecule linear phi 0.5 1 25 B
+
+potential Helfand 50.0 0.1 modify zeromean updateScheme 1S
+potential Flory A B 2.9 0.1 0.01 initialize sin 0 0.2 1.0 updateScheme 1S
+
+logFreq 50
+chemFieldFreq 100
+densityFieldFreq 100
+endBox
+
+run nvt 200

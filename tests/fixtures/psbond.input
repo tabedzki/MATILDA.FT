@@ -1,0 +1,10 @@
+box ps
+Dim 2
+randSeed -774
+species A
+bond 1 harmonic 3.0 1.0
+angle 1 harmonic 2.0 120.0
+readData psbond.data
+grid 24 24
+integrator all VV
+endBox
