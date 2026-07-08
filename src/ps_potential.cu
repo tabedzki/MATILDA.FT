@@ -250,6 +250,19 @@ void PS_Potential::update_prefactor(const int step, const int maxsteps) {
 
 
 
+// Reads the arguments that follow a "ramp" keyword and enables ramping;
+// A is the initial prefactor value.
+void PS_Potential::ramp_setup(std::istringstream& iss, float A){
+
+    ramp = true;
+    Ao_initial = A;
+    iss >> Ao_final;
+
+    if(iss.fail()) die("no final prefactor specified");
+    std::cout << "Ramping potential prefactor from " << Ao_initial << " to " << Ao_final << std::endl;
+}
+
+
 int PS_Potential::ramp_check_input(std::istringstream& iss, float A){
 
     if (iss.fail()){
@@ -261,21 +274,11 @@ int PS_Potential::ramp_check_input(std::istringstream& iss, float A){
 
     if (!iss.fail()){
         if (convert == "ramp") {
-            ramp = true;
-            iss >> Ao_final;
-            Ao_initial = A;
-
-            if(iss.fail()) die("no final prefactor specified");
-            std::cout << "Ramping potential prefactor from " << Ao_initial << " to " << Ao_final << std::endl;
-
+            ramp_setup(iss, A);
             return 1;
-
         }
-        else 
+        else
             die("Invalid keyword: " + convert);
-    }
-    else {
-        return 0;
     }
 
     return 0;

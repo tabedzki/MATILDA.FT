@@ -20,6 +20,7 @@ public:
     bool ramp = 0;
     bool allocated = false;
     int ramp_check_input(std::istringstream&, float);
+    void ramp_setup(std::istringstream&, float);
 
     float *ur, *d_ur;   // [M] potential energy func defined on grid
     float *fI, *d_fI;   // [M*Dim] field of forces acting on I

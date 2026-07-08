@@ -34,10 +34,10 @@ Langevin::Langevin(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, box
 
     
     // parse optional arguments
-    while ( iss.tellg() != -1 ) {
-        std::string temp_str;
-
-        iss >> temp_str;
+    // NOTE: do not loop on iss.tellg(); on an eof stream it sets failbit,
+    // which downstream checks treat as a malformed input line.
+    std::string temp_str;
+    while ( iss >> temp_str ) {
         if ( temp_str == "drag" ) {
             iss >> drag;
         }
@@ -46,19 +46,20 @@ Langevin::Langevin(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, box
             iss >> delt;
         }
 
+        else if ( temp_str == "ramp" ) {
+            die("ramping applied on an unsupported potential!");
+        }
+
         else {
-            std::string err_msg = temp_str + " is not a valid initialize option in fts_potential";
+            std::string err_msg = temp_str + " is not a valid option in ps_potentialLangevin";
             die(err_msg.c_str());
         }
-    } // while (!iss)
+    }
 
     if ( delt < 0.0 ) {
         std::string last_words = "ps-potentialLangevin.cu: did not find appropriate delt for the Langevin noise";
         die(last_words);
     }
-    
-    int is_ramping = ramp_check_input(iss, -1);
-    if ( is_ramping) die("ramping applied on an unsupported potential!");
 
 }
 
