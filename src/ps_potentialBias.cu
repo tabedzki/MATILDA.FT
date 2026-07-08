@@ -44,21 +44,24 @@ BiasField::BiasField(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, b
 
     
     // parse optional arguments
-    while ( iss.tellg() != -1 ) {
-        std::string temp_str;
-
-        iss >> temp_str;
+    // NOTE: do not loop on iss.tellg(); on an eof stream it sets failbit,
+    // which downstream checks treat as a malformed input line.
+    std::string temp_str;
+    while ( iss >> temp_str ) {
         if ( temp_str == "dir" ) {
             iss >> dir;
         }
         else if ( temp_str == "n_periods" ) {
             iss >> n_periods;
         }
+        else if ( temp_str == "ramp" ) {
+            ramp_setup(iss, Ao);
+        }
         else {
-            std::string err_msg = temp_str + " is not a valid initialize option in fts_potential";
+            std::string err_msg = temp_str + " is not a valid option in ps_potentialBias";
             die(err_msg.c_str());
         }
-    } // while (!iss)
+    }
 
     int M = mybox->M;
     int Dim = mybox->returnDimension();
@@ -78,10 +81,8 @@ BiasField::BiasField(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, b
     
     if ( Dim == 3 ) {
         cudaMalloc(&d_fz, M * sizeof(float));
-        fz = (float*) malloc( M * sizeof(float));        
+        fz = (float*) malloc( M * sizeof(float));
     }
-
-    int is_ramping = ramp_check_input(iss, Ao);
 }
 
 

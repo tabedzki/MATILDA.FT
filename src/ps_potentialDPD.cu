@@ -20,20 +20,20 @@ DPD::DPD(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, box), nList(n
     else
         delt = -1.0f;
 
-    while (iss.tellg() != -1) {
-        std::string word;
-        iss >> word;
+    // NOTE: do not loop on iss.tellg(); on an eof stream it sets failbit,
+    // which downstream checks treat as a malformed input line.
+    std::string word;
+    while (iss >> word) {
         if (word == "delt")
             iss >> delt;
+        else if (word == "ramp")
+            die("ramping applied on an unsupported potential!");
         else
             die("Invalid keyword in dpd potential: " + word);
     }
 
     if (delt <= 0.0f)
         die("ps_potentialDPD: delt not set or invalid");
-
-    int is_ramping = ramp_check_input(iss, -1);
-    if ( is_ramping) die("ramping applied on an unsupported potential!");
 }
 
 

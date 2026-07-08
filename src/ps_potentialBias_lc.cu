@@ -48,16 +48,17 @@ NBBiasLC::NBBiasLC(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, box
     }
 
     // optional arguments
-    while (iss.tellg() != -1) {
-        std::string s1;
-        iss >> s1;
+    // NOTE: do not loop on iss.tellg(); on an eof stream it sets failbit,
+    // which downstream checks treat as a malformed input line.
+    std::string s1;
+    while (iss >> s1) {
 
         if ( s1 == "xrange" ) {
             iss >> rmin[0];
             iss >> rmax[0];
         }
 
-        if ( s1 == "yrange" ) {
+        else if ( s1 == "yrange" ) {
             iss >> rmin[1];
             iss >> rmax[1];
         }
@@ -66,12 +67,19 @@ NBBiasLC::NBBiasLC(std::istringstream& iss, PS_Box* box) : PS_Potential(iss, box
             iss >> rmin[2];
             iss >> rmax[2];
         }
+
+        else if ( s1 == "ramp" ) {
+            ramp_setup(iss, Ao);
+        }
+
+        else {
+            std::string err_msg = s1 + " is not a valid option in ps_potentialBias_lc";
+            die(err_msg.c_str());
+        }
     }
 
     cudaMemcpy(d_rmin, rmin, dim*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_rmax, rmax, dim*sizeof(float), cudaMemcpyHostToDevice);
-
-    int is_ramping = ramp_check_input(iss, Ao);
 }
 
 NBBiasLC::~NBBiasLC() {
