@@ -13,7 +13,7 @@ Part of MATILDA.FT, released under the GNU Public License version 2 (GPLv2).
 ----------------------------------------------------------------------
 
 Quickstart guide:
-edit src/makefile so that the variable CUDA_LOC points to the installation of CUDA version 11.2 or higher. matilda.ft should then compile with a simple 'make' command from within the src folder, and the executable will be matilda.ft in this folder. 
+edit src/makefile so that the variable CUDA_LOC points to the installation of CUDA version 11.2 or higher. matilda.ft should then compile with a simple 'make' command from within the src folder, and the executable will be matilda.ft in this folder. By default the build targets the GPU(s) detected in the machine; if none are found it builds a portable multi-architecture binary instead. This can be overridden, e.g. 'make CUDA_ARCHS="70 80"' or 'make CUDA_ARCHS=fat' — see the comments at the top of src/makefile.
 
 Further details can be found in doc/MATILDA_FT_documentation.pdf, and example input files can be found in the subdirectories of examples/.
 
