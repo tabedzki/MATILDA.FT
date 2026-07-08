@@ -39,7 +39,22 @@ generated files go to `mkdtemp` directories under /tmp.
   type-group membership, cell-list neighbor list vs. an O(N²) brute-force
   reference, VV integration sanity (finite, in-box), and single-precision FFT
   wrapper roundtrip/convolution identities.
-- `fixtures/` — input + data files for the PS_Box tests, written in the
+- `unit/test_box_utils.cu` — host-side `Box` index/geometry math via the
+  ps2d fixture: `unstack`/`stack` roundtrip, `get_r` vs. manual grid
+  arithmetic, `get_kD` FFT wraparound convention, `pbc_dr2` minimum-image
+  (float and double).
+- `unit/test_bonds.cu` — analytic harmonic bond/angle checks on a 7-particle
+  bonded fixture (`fixtures/psbond.*`): parsed topology, energies and forces
+  vs. closed-form values, equal/opposite pair forces. Documents a suspected
+  bond/angle double-count on the data-file init path (see the comment in
+  `ParsesBondedFixture`).
+- `unit/test_fts_box.cu` — `FTS_Box` built from `fixtures/fts2d.input`:
+  double-precision FFT roundtrip/DC normalization, convolution identity, and
+  `integTComplexD` volume integration.
+- `unit/test_gsd_traj.cu` — `PS_Box` GSD trajectory writing/appending and
+  position roundtrip (avoids asserting `configuration/step`, which is garbage
+  until issue #1 finding 9 is fixed).
+- `fixtures/` — input + data files for the PS_Box/FTS_Box tests, written in the
   *current* input-file format (`box ps` … `endBox`). Note the shipped
   `examples/` inputs (except `examples/ft`) predate the parser rewrite and do
   not run unmodified.
