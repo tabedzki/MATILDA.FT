@@ -1,28 +1,25 @@
+# NOTE: The dynamic-bonding feature this example was written for (the old
+# "nlist ... bonding" + "extraforce ... lewis" commands) is NOT available in
+# the current MATILDA.FT source tree, so the original dynamic-binding run
+# cannot be reproduced.  This input is a best-effort modernization that runs
+# the same 10-particle system as a plain soft-sphere (Gaussian) melt so the
+# example at least exercises the current input format.  See README.txt.
+box ps
 Dim 3
+grid 25 25 25
 
-max_steps 10000
-log_freq 100
-binary_freq 1000
+logFreq 100
+gsdFreq 1000
+trajFreq 10
 pmeorder 1
-traj_freq 10
 
-charges 0.05 1.0
+species A
 
-delt 0.002
-read_data input.data
+readData input.data
 
+integrator all GJF delt 0.002
 
-Nx 25
-Ny 25
-Nz 25
+potential gaussian A A 1.0 1.0
+endBox
 
-# force_range skin_radius cell_capacity update_frequency donor/acceptor_mapping
-nlist all bonding mylist 1 2 10 50 ad_input
-
-#k_spring e_bond r0 q_induced bond_freq bond_log_freq out_file
-extraforce all lewis mylist 1.0 5.0 0.0 0.0 100 200 bonds_out
-
-integrator all GJF 
-
-n_gaussians 1
-gaussian 1 1 1.0  1.0
+run nvt 10000

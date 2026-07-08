@@ -1,24 +1,39 @@
+# Spinodal demixing of a binary blend using the DPD thermostat.
+#
+# NOTE: On the current source tree the "potential dpd ..." line aborts during
+# parsing (ps_potentialDPD.cu: the optional-argument loop leaves the input
+# stringstream in a failed state, which ramp_check_input then rejects with
+# "failed to properly read").  This is a source-side bug, not stale input --
+# the syntax below is the correct current format.  See README.txt.
+box ps
 Dim 2
+grid 75 75
 
-max_steps 2000001
-log_freq 2000
-binary_freq 10000
+logFreq 2000
+gsdFreq 10000
+fieldFreq 10000
+trajFreq 1000
 pmeorder 1
-traj_freq 1000
 
-delt 0.002
-read_data input.data
+species A
+species B
 
-Nx 75
-Ny 75
+# readData must precede the integrator (integrators allocate from nstot).
+readData input.data
 
-nlist all half_distance nlistname 2.0 3.5 100 3
-extraforce all dpd nlistname 0.5 1.0
+# Velocity-Verlet integrator; DPD reads its timestep from this integrator.
+integrator all VV delt 0.002
 
-integrator all VV 0 0
+# Cell neighbor list on the 'all' group; rcut sets the DPD interaction range.
+neighbor_list all 1.0
 
+# potential dpd <group> <gamma> <kT>
+potential dpd all 0.5 1.0
 
-n_gaussians 3
-gaussian 1 1 1.000  1.0
-gaussian 2 2 1.000  1.0
-gaussian 1 2 5.000  1.0
+# Conservative Gaussian pair interactions drive the demixing.
+potential gaussian A A 1.0 1.0
+potential gaussian B B 1.0 1.0
+potential gaussian A B 5.0 1.0
+endBox
+
+run nvt 2000001
