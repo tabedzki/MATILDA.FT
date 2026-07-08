@@ -69,9 +69,29 @@ generated files go to `mkdtemp` directories under /tmp.
 - Tests must not modify anything under `src/`; suspected bugs found while
   testing get documented (test comment or report), not silently fixed.
 
+## Regression harness
+
+`make -C tests regression` (or `tests/regression/run_regression.sh`) runs
+short, deterministic full-system simulations with the `matilda.ft` binary and
+compares every `.dat` output token-by-token against golden files
+(`compare_numeric.py`, tight default tolerances — SCFT output is
+bit-reproducible on a given GPU; the tolerance absorbs FFT rounding
+differences across GPU generations). Each case is a `regression/cases/<name>/`
+directory holding `case.input` and `golden/`; the harness discovers cases
+automatically. `run_regression.sh --update` regenerates goldens after an
+intentional behavior change — eyeball the diff before committing it.
+
+Current cases:
+
+- `fts-scft-2d` — 200 SCFT steps of a symmetric A/B homopolymer blend
+  (Helfand + Flory potentials, 48² grid), adapted from `examples/ft/input`
+  to the current parser syntax.
+
+Note the case input file is named `case.input` because the repo-root
+`.gitignore` ignores files named `input` everywhere.
+
 ## Planned
 
-A golden-file regression harness (`tests/regression/`, `make -C tests
-regression`) driving short deterministic runs of full example systems and
-diffing their numeric outputs — FTS/SCFT output is bit-reproducible,
-particle-simulation output compares within tolerance.
+- A particle-simulation (`box ps`) regression case: needs a tolerance-based
+  trajectory comparison (GPU atomicAdd ordering makes runs non-bit-identical)
+  and a fix for RNG seeding (issue #1 finding 15) to be meaningful.
