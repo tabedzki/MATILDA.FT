@@ -1,3 +1,6 @@
+# Field-theoretic simulation (SCFT) of an A-B homopolymer blend.
+# The box is opened with "box fts scft"; the run is driven by the
+# top-level "run vt <steps>" command after endBox.
 box fts scft
 Dim 2
 grid 125 125
@@ -7,9 +10,9 @@ species B
 Nr 50
 rho0 50
 
-# molecule keyword, molecule type, vol fraction number of blocks, block N, block type, block N, block type...
-molecule linear 0.5 1 25 A smear Gaussian 0.15
-molecule linear 0.5 1 25 B
+# molecule keyword, type, phi <vol fraction>, number of blocks, block N, block type, ...
+molecule linear phi 0.5 1 25 A smear Gaussian 0.15
+molecule linear phi 0.5 1 25 B
 
 # potential keyword, style Helfand, kappa*Nr, time step
 potential Helfand 50.0 0.1 modify zeromean updateScheme 1S
@@ -17,8 +20,9 @@ potential Helfand 50.0 0.1 modify zeromean updateScheme 1S
 # potential keyword, style Flory, type I, type J, chi*Nr, delt+, delt-
 potential Flory A B 2.9 0.1 0.01 initialize sin 0 0.2 1.0 updateScheme 1S
 
-maxSteps 3001
 logFreq 500
 chemFieldFreq 500
 densityFieldFreq 500
 endBox
+
+run vt 3001

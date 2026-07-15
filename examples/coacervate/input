@@ -1,0 +1,31 @@
+# Particle-based coacervate simulation (Riggleman, Kumar & Fredrickson,
+# J. Chem. Phys. 2012).  Charged polymers with smeared electrostatics.
+box ps
+Dim 3
+grid 21 21 225
+
+logFreq 5000
+gsdFreq 25000
+fieldFreq 25000
+pmeorder 1
+
+species A
+
+# Enable charges before readData so the charge column is read from the data file.
+doCharges
+
+bond 1 harmonic 1.5 0.0
+
+# readData must precede the integrator (integrators allocate from nstot).
+readData input.data
+
+integrator all GJF delt 0.005
+
+# Excluded-volume Gaussian interaction
+potential gaussian A A 0.0003688 1.0
+
+# potential charges <Bjerrum length> <smearing sigma>; acts on the 'charges' group.
+potential charges 0.43484 1.0
+endBox
+
+run nvt 2000001

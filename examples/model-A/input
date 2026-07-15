@@ -1,19 +1,31 @@
+# Particle-based Gaussian-regularized Edwards model (Model A).
+# The box is opened with "box ps"; the run is driven by the top-level
+# "run nvt <steps>" command after endBox.
+box ps
 Dim 3
+grid 21 21 21
 
-max_steps 2000001
-log_freq 1500
-binary_freq 25000
+logFreq 1500
+gsdFreq 25000
+fieldFreq 25000
 pmeorder 1
 
-delt 0.005
-read_data input.data
-integrator all GJF
+# One particle species; label becomes the group name used by potentials.
+species A
 
-Nx 21
-Ny 21
-Nz 21
-
-
+# bond <type> <style> <k> <r0>
 bond 1 harmonic 1.5 0.0
 
-potential gaussian 1 1 1.5625  1.0
+# Load particle configuration (positions, bonds) from LAMMPS-style data file.
+# readData must precede the integrator: integrators size their device
+# arrays from the particle count (nstot) at construction time.
+readData input.data
+
+# integrator <group> <style> [delt <dt>]
+integrator all GJF delt 0.005
+
+# potential <style> <groupI> <groupJ> <A0> <sigma>
+potential gaussian A A 1.5625 1.0
+endBox
+
+run nvt 2000001
