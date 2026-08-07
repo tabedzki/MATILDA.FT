@@ -14,7 +14,71 @@ CC = ${CUDA_LOC}/bin/nvcc
 
 # EIGEN_LOC = ../include/eigen-3.4.0
 
-CFLAGS = -std=c++14 -arch=sm_70 -rdc=true -O3 -I${CUDA_LOC}/include -Wno-deprecated-gpu-targets
+####################################################
+# GPU architecture selection
+#
+#   make                        - detect the GPU(s) in this machine and build
+#                                 for exactly those; if none are found, build
+#                                 the portable fat binary below
+#   make CUDA_ARCHS=fat         - fat binary for the FAT_ARCHS list + PTX for
+#                                 the newest one (future GPUs JIT-compile it)
+#   make CUDA_ARCHS=all         - every architecture this nvcc supports
+#   make CUDA_ARCHS="70 80"     - explicit list of compute capabilities
+#
+# Requested architectures that the installed CUDA toolkit cannot target are
+# dropped with a note (e.g. sm_37/K80 needs CUDA <= 11.x), so the same
+# makefile works across toolkit versions without editing.
+CUDA_ARCHS ?= detect
+
+# Everything the installed nvcc can generate code for, and the newest of them
+NVCC_ARCHS  := $(patsubst compute_%,%,$(shell ${CC} --list-gpu-arch 2>/dev/null))
+NEWEST_NVCC := $(lastword $(shell printf '%s\n' ${NVCC_ARCHS} | sort -n))
+
+# Curated portable set: K80 (37), P100 (60), V100 (70), A100 (80), H100 (90),
+# plus whatever the newest architecture of the installed CUDA release is, so
+# the fat binary always carries native code for the latest supported GPUs.
+# In-between cards run the nearest lower entry of the same major version
+# (e.g. sm_86 runs the sm_80 cubin); newer ones JIT the embedded PTX.
+FAT_ARCHS := $(shell printf '%s\n' 37 60 70 80 90 ${NEWEST_NVCC} | sort -un)
+
+ifeq (${CUDA_ARCHS},detect)
+  REQUESTED := $(shell nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | tr -d . | sort -un)
+  ifeq (${REQUESTED},)
+    $(info makefile: no local GPU detected, building fat binary for: ${FAT_ARCHS})
+    REQUESTED := ${FAT_ARCHS}
+  endif
+else ifeq (${CUDA_ARCHS},fat)
+  REQUESTED := ${FAT_ARCHS}
+else ifeq (${CUDA_ARCHS},all)
+  REQUESTED := ${NVCC_ARCHS}
+else
+  REQUESTED := ${CUDA_ARCHS}
+endif
+
+SELECTED := $(filter ${NVCC_ARCHS},${REQUESTED})
+DROPPED  := $(filter-out ${NVCC_ARCHS},${REQUESTED})
+ifneq (${DROPPED},)
+  $(info makefile: dropping architecture(s) not supported by this CUDA toolkit: ${DROPPED} (supported: ${NVCC_ARCHS}))
+endif
+ifeq (${SELECTED},)
+  ifeq (${CUDA_ARCHS},detect)
+    # e.g. a K80 under CUDA 12: can't target the local GPU, so at least
+    # produce the portable binary instead of failing
+    $(info makefile: local GPU not supported by this toolkit, building fat binary instead)
+    SELECTED := $(filter ${NVCC_ARCHS},${FAT_ARCHS})
+  else
+    $(error no requested GPU architecture is supported by ${CC}; supported: ${NVCC_ARCHS})
+  endif
+endif
+
+# cubins for every selected arch + PTX for the newest, so GPUs newer than
+# this toolkit can still run the binary via JIT compilation
+NEWEST_ARCH := $(lastword $(shell printf '%s\n' ${SELECTED} | sort -n))
+ARCH_FLAGS  := $(foreach a,${SELECTED},-gencode arch=compute_${a},code=sm_${a}) \
+               -gencode arch=compute_${NEWEST_ARCH},code=compute_${NEWEST_ARCH}
+####################################################
+
+CFLAGS = -std=c++14 ${ARCH_FLAGS} -rdc=true -O3 -I${CUDA_LOC}/include -Wno-deprecated-gpu-targets
 CPPFLAGS = --expt-relaxed-constexpr
 # CFLAGS = -std=c++14 -arch=sm_70 -rdc=true -O3 -I${CUDA_LOC}/include -I${EIGEN_LOC} -Wno-deprecated-gpu-targets
 # CPPFLAGS = -I${EIGEN_LOC} --expt-relaxed-constexpr
